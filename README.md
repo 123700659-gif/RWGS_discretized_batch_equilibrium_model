@@ -1,0 +1,112 @@
+---
+
+# 🔥 Countercurrent Chemical Looping RWGS - Discretized Batch Reactors in Series Model
+
+This code simulates chemical-looping RWGS in a 1D plug-flow-like reactor with oxides including LSF and CeO2 based oxides.
+It uses a discretizion of the oxide (space) and the gas phase (like time discritization) and then solves a sequential series 
+of batch equilibriums over the discritised elements. It is useful for quickly simulating the thermodynamic limits of countercurrent 
+chemical-looping reactors using non-stoichiometric oxides as the oxygen storage material. 
+
+---
+
+## 📄 License & Citation
+
+This model is released under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+You are free to use, modify, and distribute the code, including for commercial purposes, provided that you cite the associated publication:
+
+B. Bulfin et al., "Thermodynamic Modeling of the Countercurrent Chemical Looping Reverse Water Gas Shift Process for Redox Material Screening", *Chemical Engineering Journal*, 2025. [DOI: 10.1016/j.cej.2025.170505](https://doi.org/10.1016/j.cej.2025.170505)
+
+---
+
+## 📘 Project Summary
+
+The simulation computes:
+- **Reduction phase**: H₂ + oxide → H₂O + reduced oxide
+- **Oxidation phase**: CO₂ + reduced oxide → CO + oxide with countercurrent
+
+It tracks:
+- Oxygen non-stoichiometry (`δ` e.g. CeO_2-δ
+- Gas compositions (`x_H2O`, `x_CO2`)
+- Mass balances over the whole cycle
+- Energy balance over the whole cycle
+
+
+---
+
+## 🗂 File Overview
+
+| File                            | Purpose                                                                 |
+|---------------------------------|-------------------------------------------------------------------------|
+| `main.py`                       | Orchestrates redox cycle using the `cycle_until_balanced` function     |
+| `discretized_reduction.py`     | Models reduction step across discretized gas and oxide elements       |
+| `discretized_oxidation.py`     | Models oxidation step across discretized gas and oxide elements       |
+| `batch_equilibrium_solver.py`  | Solves the batch gas–solid equilibrium by matching μ_O                           |
+| `mass_balance.py`              | Computes mass balance metrics                       |
+| `energy_balance.py`            | Estimates enthalpy and heat flow during the two steps of the process    |
+| `build_arrays.py`              | Generates discretized mesh grids for oxide and gases                    |
+| `build_mu_O_functions.py`      | Builds interpolating functions for μ_O (solid and gas)                 |
+| `gas_thermodynamics.py`        | Gas phase equilibrium properties (μ_O, pO₂) for H₂/H₂O and CO/CO₂      |
+| `oxide_thermodynamics.py`      | μ_O equilibrium functions for solid oxides (CeO₂, CeZr, LSF, etc.)     |
+
+---
+
+## ⚙️ How It Works
+
+1. **Set material and operating conditions** in `simulate_cycle()`
+2. **Discretize** reactor space (oxide_mesh) and gas flow (gas_mesh)
+3. **Run reduction** using `compute_reduction_step()`
+4. **Feed reduction output** to `compute_oxidation_step()`
+5. **Analyze results** using `calculate_mass_balance()` or visualization routines
+
+---
+
+## 🚀 Quick Example
+
+```python
+from main import cycle_until_balanced
+
+results = cycle_until_balanced(
+    material="CeO2",
+    T=1073,
+    x_H2O_0=0.005,
+    x_CO2_0=0.995,
+    tol=1e-4
+)
+```
+
+## 📊 Output Format
+
+- `delta_red`, `delta_ox`: non-stoichiometry evolution during reduction and oxidation, arrray with shape = (gas_mesh, oxide_mesh)
+- `x_H2O_red`, `x_CO2_ox`: gas mole fractions across reactor grid during reduction and oxidation,  arrray with shape = (gas_mesh, oxide_mesh)
+- Use `.T[0]` and `.T[-1]` use slices of the mole fraction arrays to inspect outlet behavior for oxidation [0] and reduction [-1]
+
+---
+
+## 🧪 Materials Supported
+
+- `CeO2`, `CeO2_simple`
+- `CeZr05`, `CeZr15`, `CeZr20`
+- `LSF`
+
+---
+
+## 📐 Thermodynamics
+
+- All μ_O values returned in **kJ/mol**
+- μ_O(gas) from polynomial fits of cantera data and equilibrium expressions
+- μ_O(solid) from literature-derived enthalpy and entropy models
+
+
+---
+
+## 📄 Materials Data
+
+If you make use of this model please also cite the sources of the materials data and models (e.g. CeZr15 - Hao et al. 2014 data, Bulfin et al. 2016 model).
+
+---
+
+## 📄 AI Usage Statement
+
+ChatGPT was used as a coding assistant in this project. It assisted with applying PEP 8 conventions, drafting docstrings, and debugging. After review of my publication, it was also used to help draft this README. All code and text were reviewed, edited, and approved by the author.
+
