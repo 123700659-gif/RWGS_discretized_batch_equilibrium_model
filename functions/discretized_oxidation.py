@@ -29,12 +29,14 @@ def oxidation_t0_x0_bc(mu_O_delta_func, mu_O_CO2_func, x_CO2_0,
 
     d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
                                              delta_t0_x0, x_CO2_0, d_delta, d_X)
+    if d_d.size == 0:
+        return delta_t0_x0, x_CO2_0
     delta_t1_x0 = delta_t0_x0 - d_d[0]
     x_CO2_t1_x0 = x_CO2_0 - d_d[0] * mbf_ox
     return delta_t1_x0, x_CO2_t1_x0
 
 def oxidation_x0_bc(mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_oxidation,
-                    delta_t_x0, x_CO2_t_x0, d_delta, d_X, mbf_ox, gas_mesh=100):
+                    delta_t_x0, x_CO2_t_x0, d_delta, d_X, mbf_ox, oxidation, gas_mesh=100):
     """
     Compute oxidation progression along time (t) at x = 0 element.
 
@@ -56,18 +58,25 @@ def oxidation_x0_bc(mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_oxidation
     for t_step in range(1, gas_mesh):
         # Stop if oxide element is fully oxidized and fill the solution forward in time
         if delta_t_x0[t_step - 1] < delta_min_oxidation + delta_tolerance:
+            print("tolerance 1.2")
             delta_t_x0[t_step - 1:] = delta_t_x0[t_step - 1]
             x_CO2_t_x0[t_step - 1:] = x_CO2_0
             break
 
         d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
-                                                 delta_t_x0[t_step - 1], x_CO2_0, d_delta, d_X)
+                                                delta_t_x0[t_step - 1], x_CO2_0, d_delta, d_X)
+        if d_d.size == 0:
+            delta_t_x0[t_step:] = delta_t_x0[t_step - 1]
+            x_CO2_t_x0[t_step:] = x_CO2_0
+            break
+
         delta_t_x0[t_step] = delta_t_x0[t_step - 1] - d_d[0]
         x_CO2_t_x0[t_step] = x_CO2_0 - d_d[0] * mbf_ox
+
     return delta_t_x0, x_CO2_t_x0
 
 def oxidation_t0_bc(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
-                    delta_t0_x, x_CO2_t0_x, d_delta, d_X, mbf_ox, oxide_mesh=100):
+                    delta_t0_x, x_CO2_t0_x, d_delta, d_X, mbf_ox, oxidation, oxide_mesh=100):
     """
     Compute oxidation progression along space (x) at t = 0.
 
@@ -85,21 +94,30 @@ def oxidation_t0_bc(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
     Returns:
         tuple: Updated delta and CO2 profiles at t = 0.
     """
-    for x_step in range(1, oxide_mesh):
-        # Skip over fully oxidized regions
-        if delta_t0_x[x_step] < delta_min_oxidation - delta_tolerance:
-            x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step - 1]
-            continue
-
-        d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
-                                                 delta_t0_x[x_step], x_CO2_t0_x[x_step - 1],
-                                                 d_delta, d_X)
-        delta_t0_x[x_step] -= d_d[0]
-        x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step - 1] - d_d[0] * mbf_ox
+    if oxidation:
+        for x_step in range(oxide_mesh - 2, -1, -1):
+            d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
+                                                    delta_t0_x[x_step], x_CO2_t0_x[x_step + 1],
+                                                    d_delta, d_X)
+            if d_d.size == 0:
+                x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step + 1]
+                continue
+            delta_t0_x[x_step] -= d_d[0]
+            x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step + 1] - d_d[0] * mbf_ox
+    if not oxidation:
+        for x_step in range(1, oxide_mesh):
+            d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
+                                                    delta_t0_x[x_step], x_CO2_t0_x[x_step - 1],
+                                                    d_delta, d_X)
+            if d_d.size == 0:
+                x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step - 1]
+                continue
+            delta_t0_x[x_step] -= d_d[0]
+            x_CO2_t0_x[x_step] = x_CO2_t0_x[x_step - 1] - d_d[0] * mbf_ox
     return delta_t0_x, x_CO2_t0_x
 
 def oxidation_x_t(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
-                  delta_t_x, x_CO2_t_x, d_delta, d_X, mbf_ox,
+                  delta_t_x, x_CO2_t_x, d_delta, d_X, mbf_ox, oxidation,
                   gas_mesh=100, oxide_mesh=100):
     """
     Compute oxidation across the full t-x grid.
@@ -119,24 +137,52 @@ def oxidation_x_t(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
     Returns:
         tuple: Updated delta and gas composition grids.
     """
-    for x_step in range(1, oxide_mesh):
-        for t_step in range(1, gas_mesh):
-            # Stop if oxide element is fully oxidized and fill the solution forward in time
-            if delta_t_x[t_step - 1, x_step] < delta_min_oxidation + delta_tolerance:
-                delta_t_x[t_step:, x_step] = delta_t_x[t_step - 1, x_step]
-                x_CO2_t_x[t_step:, x_step] = x_CO2_t_x[t_step, x_step - 1]
-                break
+    if not oxidation:
+        for x_step in range(1, oxide_mesh):
+            for t_step in range(1, gas_mesh):
+                # Stop if oxide element is fully oxidized and fill the solution forward in time
+                if delta_t_x[t_step - 1, x_step] < delta_min_oxidation + delta_tolerance:
+                    print("tolerance 3")
+                    delta_t_x[t_step:, x_step] = delta_t_x[t_step - 1, x_step]
+                    x_CO2_t_x[t_step:, x_step] = x_CO2_t_x[t_step, x_step - 1]
+                    break
 
-            d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
-                                                     delta_t_x[t_step - 1, x_step],
-                                                     x_CO2_t_x[t_step, x_step - 1],
-                                                     d_delta, d_X)
-            delta_t_x[t_step, x_step] = delta_t_x[t_step - 1, x_step] - d_d[0]
-            x_CO2_t_x[t_step, x_step] = x_CO2_t_x[t_step, x_step - 1] - d_d[0] * mbf_ox
+                d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
+                                                        delta_t_x[t_step - 1, x_step],
+                                                        x_CO2_t_x[t_step, x_step - 1],
+                                                        d_delta, d_X)
+                if d_d.size == 0:
+                    delta_t_x[t_step, x_step] = delta_t_x[t_step - 1, x_step]
+                    x_CO2_t_x[t_step, x_step] = x_CO2_t_x[t_step, x_step - 1]
+                    continue
+                delta_t_x[t_step, x_step] = delta_t_x[t_step - 1, x_step] - d_d[0]
+                x_CO2_t_x[t_step, x_step] = x_CO2_t_x[t_step, x_step - 1] - d_d[0] * mbf_ox
+    if oxidation:
+        x_range = range(oxide_mesh - 2, -1, -1)
+        for x_step in x_range:
+            for t_step in range(1, gas_mesh):
+                # Stop if oxide element is fully oxidized and fill the solution forward in time
+                if delta_t_x[t_step - 1, x_step] < delta_min_oxidation + delta_tolerance:
+                    print("tolerance 3.1")
+                    delta_t_x[t_step:, x_step] = delta_t_x[t_step - 1, x_step]
+                    x_CO2_t_x[t_step:, x_step] = x_CO2_t_x[t_step, x_step + 1]
+                    break
+
+                d_d = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func,
+                                                        delta_t_x[t_step - 1, x_step],
+                                                        x_CO2_t_x[t_step, x_step + 1],
+                                                        d_delta, d_X)
+                if d_d.size == 0:
+                    delta_t_x[t_step, x_step] = delta_t_x[t_step - 1, x_step]
+                    x_CO2_t_x[t_step, x_step] = x_CO2_t_x[t_step, x_step + 1]
+                    continue
+                delta_t_x[t_step, x_step] = delta_t_x[t_step - 1, x_step] - d_d[0]
+                x_CO2_t_x[t_step, x_step] = x_CO2_t_x[t_step, x_step + 1] - d_d[0] * mbf_ox
     return delta_t_x, x_CO2_t_x
 
 def compute_oxidation_step(mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_oxidation,
                            delta_t_x, x_CO2_t_x, d_delta, d_X, mbf_ox,
+                           oxidation,
                            gas_mesh=100, oxide_mesh=100):
     """
     Perform full oxidation step across the reactor grid.
@@ -159,28 +205,26 @@ def compute_oxidation_step(mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_ox
     Returns:
         tuple: Updated delta and CO2 fraction grids after oxidation.
     """
-    # Reverse solid profile to simulate counter-current oxidation
-    delta_t_x[0] = np.flip(delta_t_x[0])
+    boundary_x = -1 if oxidation else 0
 
     # Apply boundary conditions and solve over the mesh
-    delta_t_x[0, 0], x_CO2_t_x[0, 0] = oxidation_t0_x0_bc(
+    delta_t_x[0, boundary_x], x_CO2_t_x[0, boundary_x] = oxidation_t0_x0_bc(
         mu_O_delta_func, mu_O_CO2_func, x_CO2_0,
-        delta_min_oxidation, delta_t_x[0, 0], d_delta, d_X, mbf_ox
+        delta_min_oxidation, delta_t_x[0, boundary_x], d_delta, d_X, mbf_ox
     )
-    delta_t_x[:, 0], x_CO2_t_x[:, 0] = oxidation_x0_bc(
+    delta_t_x[:, boundary_x], x_CO2_t_x[:, boundary_x] = oxidation_x0_bc(
         mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_oxidation,
-        delta_t_x[:, 0], x_CO2_t_x[:, 0], d_delta, d_X, mbf_ox, gas_mesh=gas_mesh
+        delta_t_x[:, boundary_x], x_CO2_t_x[:, boundary_x],
+        d_delta, d_X, mbf_ox, gas_mesh=gas_mesh, oxidation=oxidation
     )
     delta_t_x[0], x_CO2_t_x[0] = oxidation_t0_bc(
         mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
-        delta_t_x[0], x_CO2_t_x[0], d_delta, d_X, mbf_ox, oxide_mesh=oxide_mesh
+        delta_t_x[0], x_CO2_t_x[0], d_delta, d_X, mbf_ox, oxide_mesh=oxide_mesh, oxidation=oxidation,
     )
     delta_t_x, x_CO2_t_x = oxidation_x_t(
         mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
         delta_t_x, x_CO2_t_x, d_delta, d_X, mbf_ox,
-        gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        gas_mesh=gas_mesh, oxide_mesh=oxide_mesh, oxidation=oxidation
     )
 
-    # Flip back to original orientation
-    return np.flip(delta_t_x, axis=1), np.flip(x_CO2_t_x, axis=1)
-
+    return delta_t_x, x_CO2_t_x

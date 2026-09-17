@@ -13,7 +13,7 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color= plt.cm.viridis(np.linspace(0
         reduction: 
             -left = True: original
         oxidation:
-            -left = False: original
+            -left = True: original
 '''
 reduction=True
 oxidation=True

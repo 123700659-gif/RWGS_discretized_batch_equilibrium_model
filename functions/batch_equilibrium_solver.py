@@ -21,7 +21,12 @@ def reduction(mu_O_delta_func, mu_O_H2O_func, delta_i, x_H2O_i, d_delta, d_X):
     Raises:
         ValueError: If no intersection of chemical potential curves is found.
     """
-    diff_mu_O = mu_O_delta_func(delta_i + d_delta) - mu_O_H2O_func(x_H2O_i + d_X)
+    diff_0 = mu_O_H2O_func(x_H2O_i) - mu_O_delta_func(delta_i)
+
+    if diff_0 < 0:
+        diff_mu_O = mu_O_delta_func(delta_i + d_delta) - mu_O_H2O_func(x_H2O_i + d_X)
+    else:
+        diff_mu_O = mu_O_delta_func(delta_i - d_delta) - mu_O_H2O_func(x_H2O_i - d_X)
     idx = np.argwhere(np.diff(np.sign(diff_mu_O))).flatten()
     d_d = d_delta[idx] - diff_mu_O[idx] / (
         (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
@@ -49,14 +54,23 @@ def oxidation(mu_O_delta_func, mu_O_CO2_func, delta_i, x_CO2_i, d_delta, d_X):
     Raises:
         ValueError: If no equilibrium point (intersection of chemical potential curves) is found.
     """
-    diff_mu_O = -mu_O_delta_func(delta_i - d_delta) + mu_O_CO2_func(x_CO2_i - d_X)
+    diff_0 = mu_O_CO2_func(x_CO2_i) - mu_O_delta_func(delta_i)
+
+    if diff_0 > 0:
+        diff_mu_O = -mu_O_delta_func(delta_i - d_delta) + mu_O_CO2_func(x_CO2_i - d_X)
+    else:
+        diff_mu_O = mu_O_delta_func(delta_i - d_delta) - mu_O_CO2_func(x_CO2_i - d_X)
+
     idx = np.argwhere(np.diff(np.sign(diff_mu_O))).flatten()
 
-    if len(idx) == 0:
-        raise ValueError("No equilibrium point found: no intersection in chemical potential curves.")
+    if diff_0 > 0:
+        d_d = d_delta[idx] - diff_mu_O[idx] / (
+                (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
+            )
+    else:
+        d_d = -d_delta[idx] + diff_mu_O[idx] / (
+                        (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
+                    )
 
-    d_d = d_delta[idx] - diff_mu_O[idx] / (
-        (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
-    )
     return d_d
 

@@ -4,10 +4,12 @@ from functions import build_mu_O_functions
 from functions.discretized_reduction import compute_reduction_step
 from functions.discretized_oxidation import compute_oxidation_step
 
-def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=np.zeros(100),
-                   T=1073, n_CO2=1.0, n_H2=1.01, n_oxide=20,
-                   x_H2O_0=0.005, x_CO2_0=0.998,
-                   oxide_mesh=100, gas_mesh=100):
+def simulate_cycle(material, first_cycle,
+                   T, n_CO2, n_H2, n_oxide,
+                   x_H2O_0, x_CO2_0,
+                   oxide_mesh, gas_mesh,
+                   reduction, oxidation, 
+                   delta_x_0=np.zeros(100)):
     """
     Simulate a single chemical looping cycle (reduction + oxidation) in a 1D reactor.
 
@@ -95,7 +97,7 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=np.zeros(100),
     delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
         mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
         delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
-        mbf_ox, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
     )
 
     return delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox

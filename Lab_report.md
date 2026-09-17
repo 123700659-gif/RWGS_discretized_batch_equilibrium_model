@@ -219,3 +219,14 @@ current issue:
 reduction=oxidation=True
 ````
 are wrong. The issue is there.
+
+#### Thursday:
+
+```python
+        reduction: 
+            -left = True: original
+        oxidation:
+            -left = True: original
+````
+
+
