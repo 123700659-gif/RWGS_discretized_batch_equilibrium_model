@@ -228,5 +228,6 @@ are wrong. The issue is there.
         oxidation:
             -left = True: original
 ````
-
+-   `example_1_simulate_cycle` has been fixed and outputs are coherent
+-   `mass_balance_test.py`has been ran once, results for original settings are incoherent $\rightarrow$ to fix
 

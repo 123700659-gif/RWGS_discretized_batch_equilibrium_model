@@ -34,6 +34,9 @@ n_oxide = 20  # Moles of oxide material
 cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
+gas_mesh, oxide_mesh = 100, 100 # Discretization
+reduction=True
+oxidation=True
 
 # === Initialize storage for plotting variables
 delta_red_end = []
@@ -61,13 +64,17 @@ for cycle in range(cycles):
     # Run one redox cycle (reduction followed by oxidation)
     delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox = simulate_cycle(
         material=material,
-        first_cycle=first_cycle,
-        delta_x_0=delta_x_0,
-        x_CO2_0=x_CO2_0,
-        x_H2O_0=x_H2O_0,
-        T=T,
-        n_H2=n_H2,
-        n_oxide=n_oxide
+            first_cycle=True,
+            x_CO2_0=x_CO2_0,
+            x_H2O_0=x_H2O_0,
+            T=T,
+            n_CO2=n_CO2,
+            n_H2=n_H2,
+            n_oxide=n_oxide,
+            gas_mesh = gas_mesh,
+            oxide_mesh = oxide_mesh, 
+            reduction=reduction,
+            oxidation=oxidation
     )
 
     # Update flag and initial condition for next cycle
