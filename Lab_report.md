@@ -231,3 +231,31 @@ are wrong. The issue is there.
 -   `example_1_simulate_cycle` has been fixed and outputs are coherent
 -   `mass_balance_test.py`has been ran once, results for original settings are incoherent $\rightarrow$ to fix
 
+#### Friday:
+
+-   `example_1_simulate_cycle.py` :reduction arrow was pointing the wrong direction :
+```python
+reduction = True r'H$_2$ flow $\\rightarrow$'
+oxidation = True r'$\\leftarrow$ CO$_2$ flow'
+````
+-   `mass_balance.py`: `d_delta_*` name changed to fit the material used
+-   `mass_balance.py`: calculation assumes 1:1 reaction
+-   `main.py`: MAIN ISSUE in previous code $\rightarrow$ deleted now:
+```python
+elif reduction and not oxidation:
+        # Use reduction output as initial condition for oxidation
+        delta_t_x_ox[0] = delta_t_x_red[-1]
+        delta_t_x_ox[0] = np.flip(delta_t_x_ox[0])
+
+        # Run oxidation simulation
+        delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
+            mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
+            delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
+            mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        )
+        delta_t_x_ox = np.flip(delta_t_x_ox, axis=1)
+````
+To do: 
+-   keep fixing `mass_balance_test.py`and `discretizations_test.py`
+
+

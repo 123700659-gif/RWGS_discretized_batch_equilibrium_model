@@ -58,7 +58,7 @@ def oxidation_x0_bc(mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min_oxidation
     for t_step in range(1, gas_mesh):
         # Stop if oxide element is fully oxidized and fill the solution forward in time
         if delta_t_x0[t_step - 1] < delta_min_oxidation + delta_tolerance:
-            print("tolerance 1.2")
+            #print("tolerance 1.2")
             delta_t_x0[t_step - 1:] = delta_t_x0[t_step - 1]
             x_CO2_t_x0[t_step - 1:] = x_CO2_0
             break
@@ -142,7 +142,7 @@ def oxidation_x_t(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
             for t_step in range(1, gas_mesh):
                 # Stop if oxide element is fully oxidized and fill the solution forward in time
                 if delta_t_x[t_step - 1, x_step] < delta_min_oxidation + delta_tolerance:
-                    print("tolerance 3")
+                    #print("tolerance 3")
                     delta_t_x[t_step:, x_step] = delta_t_x[t_step - 1, x_step]
                     x_CO2_t_x[t_step:, x_step] = x_CO2_t_x[t_step, x_step - 1]
                     break
@@ -163,7 +163,7 @@ def oxidation_x_t(mu_O_delta_func, mu_O_CO2_func, delta_min_oxidation,
             for t_step in range(1, gas_mesh):
                 # Stop if oxide element is fully oxidized and fill the solution forward in time
                 if delta_t_x[t_step - 1, x_step] < delta_min_oxidation + delta_tolerance:
-                    print("tolerance 3.1")
+                    #print("tolerance 3.1")
                     delta_t_x[t_step:, x_step] = delta_t_x[t_step - 1, x_step]
                     x_CO2_t_x[t_step:, x_step] = x_CO2_t_x[t_step, x_step + 1]
                     break
