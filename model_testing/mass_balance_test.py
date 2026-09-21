@@ -36,7 +36,7 @@ x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
 reduction=True
-oxidation=False
+oxidation=True
 
 # === Initialize storage for plotting variables
 delta_red_end = []
@@ -48,7 +48,7 @@ O_bal_oxide_values = []
 O_bal_oxide_values_red = []
 
 # === Initial state of the oxide bed (uniform delta profile)
-delta_x_0 = np.zeros(100)
+delta_x_0 = np.zeros(oxide_mesh)
 first_cycle = True
 
 # === Run simulation for defined number of cycles
@@ -56,16 +56,13 @@ for cycle in range(cycles):
     tic = time.perf_counter()
 
     # Get previous oxidation profile or initial state
-    if first_cycle:
-        delta_ox_prev = delta_x_0
-    else:
-        delta_ox_prev = delta_t_x_ox[-1]
-
+    delta_ox_prev = delta_x_0
+    
     # Run one redox cycle (reduction followed by oxidation)
     delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox = simulate_cycle(
         material=material,
-            first_cycle=first_cycle,
-            delta_x_0=delta_x_0,
+            first_cycle=first_cycle,    
+            delta_x_0=delta_ox_prev,    # use previous oxidation profile
             x_CO2_0=x_CO2_0,
             x_H2O_0=x_H2O_0,
             T=T,

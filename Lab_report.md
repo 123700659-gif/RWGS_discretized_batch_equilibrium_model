@@ -259,3 +259,98 @@ To do:
 -   keep fixing `mass_balance_test.py`and `discretizations_test.py`
 
 
+## Week 2 - 21/09
+
+### Monday: 
+Changes done:
+-   `mass_balance_test.py` $\rightarrow$ `l.65`
+-   `mass_balance.py` $\rightarrow$ add debug
+-    on `main.py`:
+```python
+elif reduction and not oxidation:
+        # Use reduction output as initial condition for oxidation
+        delta_t_x_ox[0] = delta_t_x_red[-1]
+        delta_t_x_ox[0] = np.flip(delta_t_x_ox[0])
+
+        # Run oxidation simulation
+        delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
+            mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
+            delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
+            mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        )
+        delta_t_x_ox = np.flip(delta_t_x_ox, axis=1)
+````
+
+This is the key point:
+-   if in the code: `mass_balance_test.py` first plot comes out ok, 2nd one weird, but `example_1_simulate_cycle.py` 3rd plot is wrong.
+-   if not in the code: both `mass_balance_test.py` plots are wrong but `example_1_simulate_cycle.py` is ok.
+`example_1_simulate_cycle.py`: 1st plot never changes
+$\rightarrow$ `discretized_reduction.py`changed: 
+```python
+if not oxidation:
+        delta_x_t = np.flip(delta_x_t, axis=1)
+```
+$\rightarrow$ the python code (see above with `elif`) has been re-integrated in `main.py`.
+
+
+In `mass_balance_test.py`:
+```python
+reduction=True
+oxidation=False
+```
+```bash
+Cycle 0: solve time 0.61 s,  1.1399222521231989 0.6577807127025062
+Cycle 1: solve time 0.42 s,  1.100526066897315 0.5998404423056906
+Cycle 2: solve time 0.43 s,  1.1255598544231764 0.6003822330810967
+Cycle 3: solve time 0.43 s,  1.1668895066945502 0.5913077001612224
+Cycle 4: solve time 0.44 s,  1.200781251247346 0.6008350446742673
+Cycle 5: solve time 0.45 s,  1.2615542619203983 0.5605336849457493
+Cycle 6: solve time 0.45 s,  1.3228072583076236 0.5674691521576138
+Cycle 7: solve time 0.45 s,  1.3773226032084904 0.5749707575058658
+Cycle 8: solve time 0.45 s,  1.4311021054876147 0.5797209161211284
+Cycle 9: solve time 0.45 s,  1.489554702020823 0.5439469779883672
+Cycle 10: solve time 0.45 s,  1.4973237442238196 0.5646849173349094
+Cycle 11: solve time 0.46 s,  1.5019514016403523 0.5646849173349094
+Cycle 12: solve time 0.46 s,  1.504830142607878 0.5646849173349094
+Cycle 13: solve time 0.45 s,  1.5066822112772678 0.5646849173349094
+Cycle 14: solve time 0.45 s,  1.507912068791415 0.5646849173349094
+Cycle 15: solve time 0.47 s,  1.5087541647611948 0.5646849173349094
+Cycle 16: solve time 0.49 s,  1.5093488120092993 0.5646849173349094
+Cycle 17: solve time 0.46 s,  1.5097799163241254 0.5646849173349094
+Cycle 18: solve time 0.45 s,  1.5101009405161947 0.5646849173349094
+Cycle 19: solve time 0.45 s,  1.5103436682154479 0.5646849173349094
+Final CO2 conversion: 0.9791607030631446
+```
+```python
+reduction=True
+oxidation=True
+```
+```bash
+Cycle 0: solve time 0.64 s,  0.9999999999999547 0.6581657564510776
+Cycle 1: solve time 0.66 s,  0.9999999999999998 0.8311487190808882
+Cycle 2: solve time 0.68 s,  0.9999999999999999 0.9331817509858046
+Cycle 3: solve time 0.66 s,  1.0000000000000004 0.9520834998988955
+Cycle 4: solve time 0.72 s,  1.0 0.962828485552031
+Cycle 5: solve time 0.68 s,  1.0000000000000002 0.9698449293637391
+Cycle 6: solve time 0.68 s,  1.0000000000000002 0.9747739993762063
+Cycle 7: solve time 0.69 s,  1.0000000000000004 0.9784141437944188
+Cycle 8: solve time 0.69 s,  1.0000000000000002 0.9812036168155593
+Cycle 9: solve time 0.68 s,  1.0000000000000002 0.9834056684524024
+Cycle 10: solve time 0.67 s,  1.0000000000000002 0.9851855473781354
+Cycle 11: solve time 0.73 s,  0.9999999999999999 0.9866518385228823
+Cycle 12: solve time 0.67 s,  1.0000000000000004 0.9878804286286709
+Cycle 13: solve time 0.67 s,  0.9999999999999998 0.98892371218233
+Cycle 14: solve time 0.67 s,  1.0000000000000002 0.989820338699021
+Cycle 15: solve time 0.67 s,  1.0000000000000002 0.9905988882867952
+Cycle 16: solve time 0.67 s,  1.0 0.9912805730234865
+Cycle 17: solve time 0.67 s,  1.0 0.9918827274008992
+Cycle 18: solve time 0.67 s,  1.0 0.9924181991283212
+Cycle 19: solve time 0.68 s,  1.0 0.9928972323265887
+Final CO2 conversion: 0.9903496071329413
+```
+
+Changes made in `mass_balance.py` : both plots look more coherent for 
+```python
+reduction=oxidation=True
+```
+even though 2nd plot has oxidation slightly decreasing, but for `oxidation=False`the output is clearly wrong. The oxide and gas values are going further apoart instead of closer.

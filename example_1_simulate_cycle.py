@@ -43,7 +43,7 @@ delta_red, xH2O_red, delta_ox, xCO2_ox = simulate_cycle(
     gas_mesh = gas_mesh,
     oxide_mesh = oxide_mesh, 
     reduction=reduction,
-    oxidation=oxidation
+    oxidation=oxidation,
 )
 
 # === CALCULATE ENERGY AND MASS BALANCE
@@ -99,14 +99,12 @@ def plot_outlet_mole_fraction(x_i_t_x, label, gas_mesh, reduction = True) :
 '''
 
 if reduction and oxidation:
-    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh, "Plot for reduction=left oxidation=left")
-    plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\leftarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=left oxidation=left")
-    plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)
-elif reduction and not oxidation:
     plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=left")
     plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\rightarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=left")
+    plot_delta_profiles(delta_ox, '$\\leftarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=left")
     plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)
-
-
+elif reduction and not oxidation:
+    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=right")
+    plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
+    plot_delta_profiles(delta_ox, '$\\rightarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=right")
+    plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)

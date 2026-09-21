@@ -87,19 +87,32 @@ def simulate_cycle(material, first_cycle,
     delta_t_x_red, x_H2O_t_x_red = compute_reduction_step(
         mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
         delta_t_x_red, x_H2O_t_x_red, d_delta_red, d_X_red,
-        mbf_red, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        mbf_red, reduction=reduction, oxidation=oxidation,
+        gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
     )
 
-    # Use reduction output as the initial condition for oxidation. The
+    # Use the reduction output as the initial condition for oxidation. The
     # oxidation solver handles the flow direction through the `oxidation` flag.
-    delta_t_x_ox[0] = delta_t_x_red[-1]
+    if reduction and oxidation:
+        delta_t_x_ox[0] = delta_t_x_red[-1]
 
-    delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
-        mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
-        delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
-        mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
-    )
+        delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
+            mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
+            delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
+            mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        )
+    elif reduction and not oxidation:
+        # Use reduction output as initial condition for oxidation
+        delta_t_x_ox[0] = delta_t_x_red[-1]
+        delta_t_x_ox[0] = np.flip(delta_t_x_ox[0])
 
+        # Run oxidation simulation
+        delta_t_x_ox, x_CO2_t_x_ox = compute_oxidation_step(
+            mu_O_delta_func, mu_O_CO2_func, x_CO2_0, delta_min,
+            delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
+            mbf_ox, oxidation=oxidation, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
+        )
+        delta_t_x_ox = np.flip(delta_t_x_ox, axis=1)
     return delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox
 
 

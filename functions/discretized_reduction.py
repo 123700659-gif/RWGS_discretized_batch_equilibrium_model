@@ -1,3 +1,4 @@
+import numpy as np
 from functions import batch_equilibrium_solver
 
 # Tolerances for stopping criteria
@@ -127,6 +128,7 @@ def reduction_x_t(mu_O_delta_func, mu_O_H2O_func, delta_t_x, x_H2O_t_x,
 
 def compute_reduction_step(mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
                            delta_x_t, x_H2O_x_t, d_delta, d_X, mbf_red,
+                           reduction, oxidation,
                            gas_mesh=100, oxide_mesh=100):
     """
     Execute full reduction step over the reactor grid.
@@ -146,6 +148,9 @@ def compute_reduction_step(mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
     Returns:
         tuple: Updated delta and H2O mole fraction grids.
     """
+    if not oxidation:
+        delta_x_t = np.flip(delta_x_t, axis=1)
+
     delta_x_t[0, 0], x_H2O_x_t[0, 0] = reduction_t0_x0_bc(
         mu_O_delta_func, mu_O_H2O_func, x_H2O_0, delta_x_t[0, 0], d_delta, d_X, mbf_red
     )
@@ -161,4 +166,6 @@ def compute_reduction_step(mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
         mu_O_delta_func, mu_O_H2O_func, delta_x_t, x_H2O_x_t,
         d_delta, d_X, mbf_red, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
     )
+    if not oxidation:
+        delta_x_t = np.flip(delta_x_t, axis=1)
     return delta_x_t, x_H2O_x_t

@@ -27,23 +27,24 @@ def calculate_mass_balance(delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x
             O_balance_CO_H2O (float): Oxygen mass balance between CO2 and H2 streams.
             O_balance_CO2_oxide (float): Oxygen mass balance between CO2 stream and oxide.
     """
-    # Compute CO2 conversion: inflow - mean outflow at x = 0 (averaged over time)
-    x_CO2_outlet = (x_CO2_t_x_ox.T[0].mean() 
-                    if oxidation
-                     else x_CO2_t_x_ox.T[-1].mean() )
-    X_CO2 = x_CO2_0 - x_CO2_outlet
-
     # Infer H2 consumption from H2O production using the 1:1 H2:H2O stoichiometry.
     x_H2O_outlet = x_H2O_t_x_red.T[-1].mean()
-    n_H2O = (x_H2O_outlet - x_H2O_0) * n_H2
-    X_H2 = n_H2O / n_H2 if n_H2 != 0 else np.nan
+    X_H2 = x_H2O_outlet - x_H2O_0
+    n_H2O = X_H2 * n_H2
 
-    # Change in delta across cycle (reduction to oxidation)
+    # Change in delta across the reduction-to-oxidation endpoints.
     d_delta_material = delta_t_x_red[-1] - delta_t_x_ox[-1]
-    nO_material = d_delta_material.sum() * n_oxide / len(delta_t_x_red[-1])
-
+    nO_material = (d_delta_material.sum() * n_oxide / len(d_delta_material))    
     # Total moles of CO produced
-    n_CO = (x_CO2_0 - x_CO2_outlet) * n_CO2
+    if oxidation:
+        x_CO2_in = x_CO2_t_x_ox[:, -1]
+        x_CO2_out = x_CO2_t_x_ox[:, 0]
+    else:
+        x_CO2_in = x_CO2_t_x_ox[:, 0]
+        x_CO2_out = x_CO2_t_x_ox[:, -1]
+
+    X_CO2 = np.mean(x_CO2_in - x_CO2_out)
+    n_CO = X_CO2 * n_CO2
 
     # Oxygen atom balance comparisons
     O_balance_CO_H2O = n_CO / n_H2O if n_H2O != 0 else np.nan  # gas-to-gas oxygen balance
