@@ -354,3 +354,27 @@ Changes made in `mass_balance.py` : both plots look more coherent for
 reduction=oxidation=True
 ```
 even though 2nd plot has oxidation slightly decreasing, but for `oxidation=False`the output is clearly wrong. The oxide and gas values are going further apoart instead of closer.
+
+### Tuesday:
+
+-    Running of `discretization_tests.py`: no difference in the results beteween `oxidation=True` and `oxidation=False` $\rightarrow$ high irregularities, plots incoherent $\rightarrow$ `cycle_until_balanced`could be wrong
+-   Running of `example_2`:
+```python
+reduction=True
+oxidation=True
+```
+```bash
+# of cycles till balanced= 16 | O balance oxide = 0.989957 | CO/H2O = 0.98908 
+X_CO2 = 0.9799 | X_H2 = 0.6604 | Q_red = 120.602 kJ/mol | Q_ox = -86.763 kJ/mol
+```
+```python
+reduction=True
+oxidation=False
+```
+```bash
+ # of cycles till balanced= 50 | O balance oxide = 0.956827 | CO/H2O = 0.32866 
+X_CO2 = 0.5959 | X_H2 = 1.2087 | Q_red = 71.275 kJ/mol | Q_ox = -50.697 kJ/mol
+```
+Still an *issue with balancing oxide and gas values.*
+
+

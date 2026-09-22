@@ -25,7 +25,6 @@ mesh_range = np.arange(2, 250, 2)
 reduction=True
 oxidation=False
 
-
 # === Initialize storage lists ===
 solve_time = []
 X_CO2_values = []
@@ -76,7 +75,7 @@ plt.ylabel("Conversion extent $X_i$ [-]")
 plt.axvline(x = 100, color = 'black', ls = '--', label = 'default value')
 plt.legend()
 
-plt.set_xlim(0, 250)
+plt.xlim(0, 250)
 filename = Path("plots") / "mesh_test_conversion.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 
