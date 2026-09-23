@@ -377,4 +377,19 @@ X_CO2 = 0.5959 | X_H2 = 1.2087 | Q_red = 71.275 kJ/mol | Q_ox = -50.697 kJ/mol
 ```
 Still an *issue with balancing oxide and gas values.*
 
+### Meeting:
 
+```python
+if left = True $\rightarrow$ flip
+```
+
+-   default: `oxidation=False`
+-   use string: add dictionary ?
+Try
+``python
+N_oxide=3
+N_gas=3
+```
+for `batch_equilibrium_tests.py` $\rightarrow$  16 plots
+should always cross
+-   find correlation equation (in paper) and code

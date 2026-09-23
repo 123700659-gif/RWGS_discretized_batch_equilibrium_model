@@ -36,7 +36,7 @@ x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
 reduction=True
-oxidation=True
+oxidation=False
 
 # === Initialize storage for plotting variables
 delta_red_end = []
