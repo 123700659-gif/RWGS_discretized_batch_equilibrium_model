@@ -393,3 +393,9 @@ N_gas=3
 for `batch_equilibrium_tests.py` $\rightarrow$  16 plots
 should always cross
 -   find correlation equation (in paper) and code
+
+
+### Friday:
+
+Brendan fixed issues in `batch_equilibrium_solver`: work on new files
+`discretization_....py`has been merged as one file
