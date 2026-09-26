@@ -17,8 +17,8 @@ n_H2 = 1.5  # Moles of H2 per reduction cycle
 n_oxide = 15  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
-reduction=True
-oxidation=False
+left_red=False
+left_ox=False
 
 # === Simulate cycles===
 delta_red, x_H2O_red, delta_ox, x_CO2_ox, cycles = cycle_until_balanced(
@@ -29,9 +29,7 @@ delta_red, x_H2O_red, delta_ox, x_CO2_ox, cycles = cycle_until_balanced(
     n_H2=n_H2,
     n_oxide=n_oxide,
     x_CO2_0=x_CO2_0,
-    x_H2O_0=x_H2O_0, 
-    reduction=reduction, 
-    oxidation=oxidation
+    x_H2O_0=x_H2O_0
 )
 
 # === Post processing ===
@@ -42,8 +40,8 @@ X_CO2, X_H2, O_bal_gas, O_bal_oxide= calculate_mass_balance(
     n_oxide=n_oxide,
     x_CO2_0=x_CO2_0,
     x_H2O_0=x_H2O_0,
-    reduction=reduction, 
-    oxidation=oxidation
+    left_flow_red=left_red, 
+    left_flow_ox=left_ox
 )
 
 

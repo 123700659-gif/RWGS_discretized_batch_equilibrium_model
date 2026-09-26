@@ -386,7 +386,7 @@ if left = True $\rightarrow$ flip
 -   default: `oxidation=False`
 -   use string: add dictionary ?
 Try
-``python
+```python
 N_oxide=3
 N_gas=3
 ```
@@ -399,3 +399,26 @@ should always cross
 
 Brendan fixed issues in `batch_equilibrium_solver`: work on new files
 `discretization_....py`has been merged as one file
+
+
+### Saturday: 
+
+incorportation of changes in the rest of the files
+```python
+left_red=False
+left_ox=True
+
+
+# of cycles till balanced= 28 | O balance oxide = 0.989952 | CO/H2O = 0.98984 
+X_CO2 = 0.9801 | X_H2 = 0.6601 | Q_red = 120.646 kJ/mol | Q_ox = -86.800 kJ/mol
+
+left_red=False
+left_ox=False
+
+
+bash-3.2$ python example_2_cycle_until_balanced.py
+ # of cycles till balanced= 28 | O balance oxide = -0.989952 | CO/H2O = -0.98984 
+X_CO2 = -0.9801 | X_H2 = 0.6601 | Q_red = -120.646 kJ/mol | Q_ox = 86.800 kJ/mol
+```
+
+

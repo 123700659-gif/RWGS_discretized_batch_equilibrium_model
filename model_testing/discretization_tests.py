@@ -22,8 +22,8 @@ n_oxide = 40            # Moles of oxide in the bed
 x_CO2_0 = 0.998         # Initial mole fraction CO2
 x_H2O_0 = 0.002         # Initial mole fraction H2O
 mesh_range = np.arange(2, 250, 2)
-reduction=True
-oxidation=False
+left_red=False
+left_ox=False
 
 # === Initialize storage lists ===
 solve_time = []
@@ -51,7 +51,9 @@ for mesh in mesh_range:
         delta_t_x_red, x_H2O_t_x_red,
         delta_t_x_ox, x_CO2_t_x_ox,
         n_H2=n_H2, n_oxide=n_oxide,
-        x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0
+        x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0,
+        left_flow_red=left_red, 
+        left_flow_ox=left_ox
     )
 
     X_CO2_values.append(X_CO2)

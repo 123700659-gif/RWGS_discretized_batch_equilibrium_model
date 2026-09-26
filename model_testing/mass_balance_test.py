@@ -35,8 +35,7 @@ cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-reduction=True
-oxidation=False
+left_ox=False
 
 # === Initialize storage for plotting variables
 delta_red_end = []
@@ -71,8 +70,8 @@ for cycle in range(cycles):
             n_oxide=n_oxide,
             gas_mesh = gas_mesh,
             oxide_mesh = oxide_mesh, 
-            reduction=reduction,
-            oxidation=oxidation
+            left_flow_red=False, 
+            left_flow_ox=left_ox
     )
 
     # Update flag and initial condition for next cycle
@@ -87,8 +86,8 @@ for cycle in range(cycles):
         x_H2O_0=x_H2O_0,
         n_H2=n_H2,
         n_oxide=n_oxide, 
-        reduction=reduction, 
-        oxidation=oxidation
+        left_flow_red=False, 
+        left_flow_ox=left_ox
     )
 
     # Change in delta during reduction step

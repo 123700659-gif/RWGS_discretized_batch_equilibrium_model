@@ -2,7 +2,7 @@ import numpy as np
 
 def calculate_mass_balance(delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox,
                            n_CO2=1.0, n_H2=1.0, n_oxide=20.0, x_CO2_0=0.998, x_H2O_0=0.005,
-                           reduction=True, oxidation=True):
+                           left_flow_red=False, left_flow_ox=True):
     """
     Compute the mass balance for a full redox cycle.
 
@@ -36,10 +36,10 @@ def calculate_mass_balance(delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x
     d_delta_material = delta_t_x_red[-1] - delta_t_x_ox[-1]
     nO_material = (d_delta_material.sum() * n_oxide / len(d_delta_material))    
     # Total moles of CO produced
-    if oxidation:
+    if left_flow_ox:
         x_CO2_in = x_CO2_t_x_ox[:, -1]
         x_CO2_out = x_CO2_t_x_ox[:, 0]
-    else:
+    elif not left_flow_ox:
         x_CO2_in = x_CO2_t_x_ox[:, 0]
         x_CO2_out = x_CO2_t_x_ox[:, -1]
 

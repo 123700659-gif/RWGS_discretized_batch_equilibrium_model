@@ -9,12 +9,6 @@ from functions.energy_balance import calculate_energy_balance
 import matplotlib as mpl
 mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color= plt.cm.viridis(np.linspace(0, 1, 11)))
 
-'''
-        reduction: 
-            -left = True: original
-        oxidation:
-            -left = True: original
-'''
 
 # === Set material from options - "CeO2", "CeZr05", "CeZr15", "CeZr20", "LSF"
 material = "CeZr15"
@@ -27,8 +21,8 @@ n_oxide = 10  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-reduction=True
-oxidation=False
+left_red=False
+left_ox=True
 
 # === Simulate 1 cycle
 delta_red, xH2O_red, delta_ox, xCO2_ox = simulate_cycle(
@@ -42,15 +36,17 @@ delta_red, xH2O_red, delta_ox, xCO2_ox = simulate_cycle(
     n_oxide=n_oxide,
     gas_mesh = gas_mesh,
     oxide_mesh = oxide_mesh, 
-    reduction=reduction,
-    oxidation=oxidation,
+    left_flow_red=False, 
+    left_flow_ox=left_ox
 )
 
 # === CALCULATE ENERGY AND MASS BALANCE
 X_CO2, X_H2, O_bal_gas, O_bal_oxide = calculate_mass_balance(
     delta_red, xH2O_red, delta_ox, xCO2_ox,
     n_CO2=n_CO2, n_H2=n_H2, n_oxide=n_oxide,
-    x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0
+    x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0, 
+    left_flow_red=False, 
+    left_flow_ox=left_ox
 )
 print("MASS BALANCE, X_CO2 =", X_CO2, ", X_H2 =", X_H2, ", O_bal_gas =", O_bal_gas, ", O_bal_oxide =", O_bal_oxide)
 
@@ -61,7 +57,7 @@ print("HEAT FLOWS (per mole CO2), Q_red =", Q_red_abs, " kJ/mol", ", Q_ox =", Q_
 
 
 # === PLOTTING ===
-def plot_delta_profiles(delta_t_x, text_label, oxide_mesh, gas_mesh, title):
+def plot_delta_profiles(delta_t_x, text_label, oxide_mesh, gas_mesh):
     x_space = np.arange(oxide_mesh)
     fig, ax = plt.subplots(figsize=(4.0, 3.7))
     ax.set_xlabel('Oxide element # ($x_i$) [-]')
@@ -74,7 +70,6 @@ def plot_delta_profiles(delta_t_x, text_label, oxide_mesh, gas_mesh, title):
     ax.set_xlim(0, oxide_mesh)
     ax.text(0.45, 0.5, text_label, transform=ax.transAxes)
     ax.text(0.45, 0.5, text_label, transform=ax.transAxes)
-    plt.title(title)
     plt.legend()
     plt.show()
 
@@ -92,19 +87,15 @@ def plot_outlet_mole_fraction(x_i_t_x, label, gas_mesh, reduction = True) :
     plt.legend()
     plt.show()
 
-'''
-        original:
-        reduction = True r'H$_2$ flow $\\rightarrow$'
-        oxidation = True r'$\\leftarrow$ CO$_2$ flow'
-'''
 
-if reduction and oxidation:
-    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=left")
+
+if not left_red and left_ox:
+    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh)
     plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\leftarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=left")
+    plot_delta_profiles(delta_ox, '$\\leftarrow$ CO$_2$ flow', oxide_mesh, gas_mesh)
     plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)
-elif reduction and not oxidation:
-    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=right")
+elif not left_red and not left_ox:
+    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh)
     plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\rightarrow$ CO$_2$ flow', oxide_mesh, gas_mesh, "Plot for reduction=right oxidation=right")
+    plot_delta_profiles(delta_ox, '$\\rightarrow$ CO$_2$ flow', oxide_mesh, gas_mesh)
     plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)

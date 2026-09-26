@@ -46,7 +46,7 @@ d_delta, d_X = build_arrays.mass_balance_arrays(
     n_oxide=n_oxide, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
 )
 
-Delta_delta = batch_equilibrium_solver.reduction(mu_O_delta_func, mu_O_H2O_func, delta_i_red, x_H2O_0, d_delta, d_X)
+Delta_delta = batch_equilibrium_solver.batch_equilibrium(mu_O_delta_func, mu_O_H2O_func, delta_i_red, x_H2O_0, d_delta, d_X)
 Delta_delta_2 = batch_equilibrium_solver.oxidation(mu_O_delta_func, mu_O_CO2_func, delta_i_ox, x_CO2_0, d_delta, d_X)
 
 # VISUALIZE REDUCTION EQUILIBRIUM - This plot is figure 3 in the paper
