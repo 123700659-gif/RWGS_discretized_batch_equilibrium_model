@@ -421,4 +421,16 @@ bash-3.2$ python example_2_cycle_until_balanced.py
 X_CO2 = -0.9801 | X_H2 = 0.6601 | Q_red = -120.646 kJ/mol | Q_ox = 86.800 kJ/mol
 ```
 
+## Week 3 - 28/09
 
+### Tuesday:
+Comparison between equations in paper and in the code:
+
+-   `Eq.4:` "oxygen chemical potential profiles" $\rightarrow$ `build_mu_O_functions` 
+-   `Eq.5:` "equilibrium oxygen partial pressure in the hydrogen gas phase" $\rightarrow$ `pO2_H2O` in `gas_thermodynamics.py, l.26`
+-   `Eq.6:` "equilibrium oxygen partial pressure for the oxide as a function of the oxygen non-stoichiometry" $\rightarrow$ `oxide_thermodynamics.py`
+-   `Eq.7:` "conservation of mass constraint for the
+exchange of oxygen between the oxide and gas elements " $\rightarrow$ `mass_balance_arrays, l.106`
+-   `Eq.8:` "equilibrium solver " $\rightarrow$ `batch_equilibrium & oxidation` in `batch_equilibrium_solver`
+-   `Eq.9:` "partial pressure of oxygen " $\rightarrow$ `pO2_CO2` in `gas_thermodynamics.py, l.40`
+-   `Eq.10:` "mass balance relation" $\rightarrow$ `O_balance_CO2_oxide`in `mass_balance.py, l.51`
