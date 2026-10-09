@@ -1,6 +1,6 @@
 import numpy as np
 
-def batch_equilibrium(mu_O_delta_func, mu_O_gas_func, delta_i, x_i, d_delta, d_X, mu_tolerance=0.1):
+def batch_equilibrium(mu_O_delta_func, mu_O_gas_func, delta_i, x_i, d_delta, d_X, mu_tolerance=0.001):
     """
     Solve equilibrium condition for a batch reactor in either direction.
 

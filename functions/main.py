@@ -7,7 +7,7 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
                    T=1073, n_CO2=1.0, n_H2=1.01, n_oxide=20,
                    x_H2O_0=0.005, x_CO2_0=0.998,
                    oxide_mesh=100, gas_mesh=100,
-                   left_flow_red=False, left_flow_ox=True):
+                   left_flow_red=False, left_flow_ox=True, return_details = False):
     """
     Simulate a single chemical looping cycle (reduction + oxidation) in a 1D reactor.
 
@@ -105,6 +105,12 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
         delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
         mbf_ox, left_flow=left_flow_ox
     )
+
+    if return_details:
+        return {
+            "grids": (delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox),
+            "initial_delta_red": delta_t_x_red[0].copy(),
+        }
 
     return delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox
 

@@ -434,3 +434,26 @@ exchange of oxygen between the oxide and gas elements " $\rightarrow$ `mass_bala
 -   `Eq.8:` "equilibrium solver " $\rightarrow$ `batch_equilibrium & oxidation` in `batch_equilibrium_solver`
 -   `Eq.9:` "partial pressure of oxygen " $\rightarrow$ `pO2_CO2` in `gas_thermodynamics.py, l.40`
 -   `Eq.10:` "mass balance relation" $\rightarrow$ `O_balance_CO2_oxide`in `mass_balance.py, l.51`
+
+
+## Week 4 - 
+
+### Meeting:
+
+run mesh tests
+T=750
+P=10bar
+n_CO2=1
+n_H2=1.5
+
+increase n_oxide
+plot conversion X_CO2 & x_H2
+
+CeZr 50% - implement
+
+CuO2 - conversion limited
+ 
+### 09/10/26:
+
+Update `mass_balance.py`
+

@@ -22,33 +22,42 @@ x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
 left_red=False
-left_ox=True
+left_ox=False
+delta_x_0 = np.zeros(oxide_mesh)
 
 # === Simulate 1 cycle
-delta_red, xH2O_red, delta_ox, xCO2_ox = simulate_cycle(
-    material=material,
-    first_cycle=True,
-    x_CO2_0=x_CO2_0,
-    x_H2O_0=x_H2O_0,
-    T=T,
-    n_CO2=n_CO2,
-    n_H2=n_H2,
-    n_oxide=n_oxide,
-    gas_mesh = gas_mesh,
-    oxide_mesh = oxide_mesh, 
-    left_flow_red=False, 
-    left_flow_ox=left_ox
-)
+simulation = simulate_cycle(
+        material=material,
+            first_cycle=True,    
+            delta_x_0=delta_x_0,    # use previous oxidation profile
+            x_CO2_0=x_CO2_0,
+            x_H2O_0=x_H2O_0,
+            T=T,
+            n_CO2=n_CO2,
+            n_H2=n_H2,
+            n_oxide=n_oxide,
+            gas_mesh = gas_mesh,
+            oxide_mesh = oxide_mesh, 
+            left_flow_red=left_red,
+            left_flow_ox=left_ox, return_details=True
+    )
+
+
+delta_red, xH2O_red, delta_ox, xCO2_ox = simulation["grids"]
+delta_ox_prev = simulation["initial_delta_red"]
 
 # === CALCULATE ENERGY AND MASS BALANCE
-X_CO2, X_H2, O_bal_gas, O_bal_oxide = calculate_mass_balance(
+X_CO2, X_H2, O_bal_gas, O_bal_oxide, O_bal_oxide_red = calculate_mass_balance(
     delta_red, xH2O_red, delta_ox, xCO2_ox,
+    initial_delta_red=delta_ox_prev,
     n_CO2=n_CO2, n_H2=n_H2, n_oxide=n_oxide,
     x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0, 
-    left_flow_red=False, 
+    left_flow_red=left_red,
     left_flow_ox=left_ox
 )
-print("MASS BALANCE, X_CO2 =", X_CO2, ", X_H2 =", X_H2, ", O_bal_gas =", O_bal_gas, ", O_bal_oxide =", O_bal_oxide)
+print("MASS BALANCE, X_CO2 =", X_CO2, ", X_H2 =", X_H2,
+      ", O_bal_gas =", O_bal_gas, ", O_bal_oxide_ox =", O_bal_oxide,
+      ", O_bal_oxide_red =", O_bal_oxide_red)
 
 # calculate energy balance
 Q_red_abs, Q_ox_rel = calculate_energy_balance(
@@ -73,29 +82,22 @@ def plot_delta_profiles(delta_t_x, text_label, oxide_mesh, gas_mesh):
     plt.legend()
     plt.show()
 
-def plot_outlet_mole_fraction(x_i_t_x, label, gas_mesh, reduction = True) :
+def plot_outlet_mole_fraction(x_i_t_x, label, gas_mesh, left_flow):
     t_space = np.arange(gas_mesh)
     fig, ax = plt.subplots(figsize=(4.5, 4))
     ax.set_xlabel('Time step [-]')
     ax.set_ylabel(label)
-    if reduction:
-        ax.plot(t_space, x_i_t_x.T[-1], lw=1.0)
-    else:
-        ax.plot(t_space, x_i_t_x.T[0], lw=1.0)
+    outlet = 0 if left_flow else -1
+    ax.plot(t_space, x_i_t_x[:, outlet], lw=1.0, label=label)
     ax.set_xlim(0, gas_mesh)
     ax.set_ylim(0, 1.03)
     plt.legend()
     plt.show()
 
 
-
-if not left_red and left_ox:
-    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh)
-    plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\leftarrow$ CO$_2$ flow', oxide_mesh, gas_mesh)
-    plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)
-elif not left_red and not left_ox:
-    plot_delta_profiles(delta_red, 'H$_2$ flow $\\rightarrow$', oxide_mesh, gas_mesh)
-    plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh)
-    plot_delta_profiles(delta_ox, '$\\rightarrow$ CO$_2$ flow', oxide_mesh, gas_mesh)
-    plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, reduction = False)
+red_arrow = '$\\leftarrow$' if left_red else '$\\rightarrow$'
+ox_arrow = '$\\leftarrow$' if left_ox else '$\\rightarrow$'
+plot_delta_profiles(delta_red, f'H$_2$ flow {red_arrow}', oxide_mesh, gas_mesh)
+plot_outlet_mole_fraction(xH2O_red, '$x_{H2O}$ out', gas_mesh, left_red)
+plot_delta_profiles(delta_ox, f'CO$_2$ flow {ox_arrow}', oxide_mesh, gas_mesh)
+plot_outlet_mole_fraction(xCO2_ox, '$x_{CO_2}$ out', gas_mesh, left_ox)
