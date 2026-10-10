@@ -22,7 +22,7 @@ n_oxide = 40            # Moles of oxide in the bed
 x_CO2_0 = 0.998         # Initial mole fraction CO2
 x_H2O_0 = 0.002         # Initial mole fraction H2O
 mesh_range = np.arange(2, 250, 2)
-left_red=False
+left_red=True
 left_ox=False
 
 # === Initialize storage lists ===
@@ -46,10 +46,13 @@ for mesh in mesh_range:
         gas_mesh=mesh
     )
 
+    delta_ox_prev = delta_t_x_red[0].copy()
+
     # Compute mass balance
-    X_CO2, X_H2, O_bal_gas, O_bal_oxide = calculate_mass_balance(
+    X_CO2, X_H2, O_bal_gas, O_bal_oxide, O_bal_oxide_red = calculate_mass_balance(
         delta_t_x_red, x_H2O_t_x_red,
         delta_t_x_ox, x_CO2_t_x_ox,
+        initial_delta_red = delta_ox_prev,
         n_H2=n_H2, n_oxide=n_oxide,
         x_CO2_0=x_CO2_0, x_H2O_0=x_H2O_0,
         left_flow_red=left_red, 

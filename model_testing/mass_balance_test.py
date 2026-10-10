@@ -34,8 +34,8 @@ cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-left_flow_red=False
-left_flow_ox=False
+left_flow_red=True
+left_flow_ox=True
 
 # === Initialize storage for plotting variables
 delta_red_end = []

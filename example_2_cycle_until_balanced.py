@@ -17,8 +17,8 @@ n_H2 = 1.5  # Moles of H2 per reduction cycle
 n_oxide = 15  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
-left_red=False
-left_ox=False
+left_red=True
+left_ox=True
 
 # === Simulate cycles===
 delta_red, x_H2O_red, delta_ox, x_CO2_ox, cycles = cycle_until_balanced(

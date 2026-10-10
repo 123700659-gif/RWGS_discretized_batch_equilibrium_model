@@ -21,7 +21,7 @@ n_oxide = 10  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-left_red=False
+left_red=True
 left_ox=False
 delta_x_0 = np.zeros(oxide_mesh)
 

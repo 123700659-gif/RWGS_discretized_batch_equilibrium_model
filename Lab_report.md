@@ -457,3 +457,49 @@ CuO2 - conversion limited
 
 Update `mass_balance.py`
 
+### 10/01/26:
+
+Run of `mass_balance_test.py`: **reduction exceeds one** for both situations, but higher for 
+```python
+left_flow_red=False
+left_flow_ox=True
+```
+Run of `discretization_tests.py`: 
+```python
+left_red=False
+left_ox=False
+```
+slight irregularities for plot 2
+```python
+left_red=False
+left_ox=True
+```
+` O-balance CO/H20`is irregular , slight irregularities for plot 2
+For bto situations plot 1 is ok
+
+`example_2`:
+```python
+left_red=False
+left_ox=False
+```
+```Code
+ # of cycles till balanced= 28 | O balance oxide (oxidation) = 0.010048 | O balance oxide (reduction) = 1.015262 | CO/H2O = 0.01005 
+X_CO2 = 0.0099 | X_H2 = 0.6601 | Q_red = 1.225 kJ/mol | Q_ox = -0.881 kJ/mol
+```
+```python
+left_red=False
+left_ox=True
+```
+```Code
+ # of cycles till balanced= 28 | O balance oxide (oxidation) = 1.000000 | O balance oxide (reduction) = 1.015262 | CO/H2O = 0.99989 
+X_CO2 = 0.9900 | X_H2 = 0.6601 | Q_red = 121.871 kJ/mol | Q_ox = -87.681 kJ/mol
+```
+
+Try mesh_tests for `left_red=True`, results coherent
+
+
+
+
+
+
+
