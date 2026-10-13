@@ -495,9 +495,45 @@ left_ox=True
 X_CO2 = 0.9900 | X_H2 = 0.6601 | Q_red = 121.871 kJ/mol | Q_ox = -87.681 kJ/mol
 ```
 
-Try mesh_tests for `left_red=True`, results coherent
+Tried mesh_tests for `left_red=True`, results coherent
+
+## Week 5 - 
+
+### Meeting
+
+For introduction:
+Intensified process
+
+check test mass_balance - done 
+
+use cantera gas solution object
+
+RWGS 
+
+vary temp and hydrogen 
+
+chek max conversion (heat map)
 
 
+def solution, let it go to equilibrium
+
+have mutliple figures
+
+co-feed catalytic process is limited
+
+
+simulation model (delta as a function of x and t) 
+reduction, non-stoichiometric and what is coming out of the reactor
+compare co-current and counter-current, and alternating one
+
+
+for sequence
+cycle until closed or set max. 20 
+fix H/CO2 ratio
+gradually increase moles of oxides
+plot conversion of CO2
+see how much oxide is required to have a high conversion
+only counter-current before conversion
 
 
 

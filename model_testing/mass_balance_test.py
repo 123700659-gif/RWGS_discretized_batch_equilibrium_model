@@ -1,5 +1,6 @@
 import time
 import sys
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -34,7 +35,7 @@ cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-left_flow_red=True
+left_flow_red=False
 left_flow_ox=True
 
 # === Initialize storage for plotting variables
@@ -113,8 +114,7 @@ print("Final CO2 conversion:", X_CO2_values[-1])
 
 
 # === PLOTTING ===
-plot_dir = Path(__file__).resolve().parent / "plots"
-plot_dir.mkdir(parents=True, exist_ok=True)
+os.makedirs("plots", exist_ok=True)
 
 # === Plot 1: Delta profiles along the bed for all cycles
 x_space = np.arange(len(delta_t_x_red[-1]))+1
@@ -127,7 +127,7 @@ ax.plot(x_space, delta_red_end[0], ls='-', lw=1.2,  label='End of reduction #1')
 
 # Plot reduction delta profiles
 for i in range(1, cycles-1):
-    ax.plot(x_space, delta_red_end[i], ls='-', lw=1.0, label='__nolegend__')
+    ax.plot(x_space, delta_red_end[i+1], ls='-', lw=1.0, label='__nolegend__')
 
 # Reset color cycle for clarity
 plt.gca().set_prop_cycle(None)
@@ -135,37 +135,32 @@ plt.gca().set_prop_cycle(None)
 ax.plot(x_space, delta_ox_end[0], ls='--', lw=1.2,  label='End of oxidation #1')
 # Plot oxidation delta profiles
 for i in range(1, cycles-1):
-    ax.plot(x_space, delta_ox_end[i], ls='--', lw=1.0, label='__nolegend__')
+    ax.plot(x_space, delta_ox_end[i+1], ls='--', lw=1.0, label='__nolegend__')
 
 # Highlight final cycle
-ax.plot(x_space, delta_red_end[-1], ls='-', lw=1.2, label=f'End of reduction #{cycles}')
-ax.plot(x_space, delta_ox_end[-1], ls='--', lw=1.2, label=f'End of oxidation #{cycles}')
-ax.set_xlim(0, oxide_mesh)
+ax.plot(x_space, delta_red_end[-1], ls='-', lw=1.2,  label='End of reduction #20')
+ax.plot(x_space, delta_ox_end[-1], ls='--', lw=1.2,  label='End of oxidation #20')
+ax.set_xlim(0,100)
 ax.set_ylim(0,0.2)
 plt.legend()
-filename = plot_dir / f"mass_balance_{cycles}_cycle_delta_profiles.png"
+filename = Path("plots") / "mass_balance_20_cycle_delta_profiles.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 
 plt.show()
 
-cycle_numbers = np.arange(1, cycles + 1)
+cycles = np.linspace(1,20,20)
 # === Plot 2: System mass balance
 fig, ax = plt.subplots(figsize=(3.4, 3.2))
 ax.set_xlabel('Cycle # [-]')
 ax.set_ylabel('Mass Balance [-]')
-ax.plot(cycle_numbers, O_bal_oxide_values_red, ls='--', lw=1.3, color='tab:orange',
-        label=r'Reduction: H$_2$O/$\Delta \delta$')
-ax.plot(cycle_numbers, O_bal_oxide_values, ls=':', lw=2, color='tab:blue',
-        label=r'Oxidation: CO/$\Delta \delta$')
-ax.plot(cycle_numbers, O_bal_gas_values, ls='--', lw=1.3, color='tab:green',
-        label='Cycle: CO/H$_2$O')
-ax.plot(cycle_numbers, X_H2_values, ls='-', color='grey', lw=1.3,
-        label=r'$X_{\mathrm{H_2}}$')
-ax.plot(cycle_numbers, X_CO2_values, ls='-', lw=1.3, color='black',
-        label=r'$X_{\mathrm{CO_2}}$')
+ax.plot(cycles, O_bal_oxide_values_red, ls='--', lw=1.3, color='tab:orange', label='Reduction: H$_2$O/$\\Delta \delta$')
+ax.plot(cycles, O_bal_oxide_values, ls=':', lw=2, color='tab:blue', label='Oxidation: CO/$\\Delta \delta$')
+ax.plot(cycles, O_bal_gas_values, ls='--', lw=1.3, color = 'tab:green', label='Cycle: CO/H$_2$O')
+ax.plot(cycles, X_H2_values, ls='-', color = 'grey', lw=1.3, label='$X_{\mathrm{H_2}}$')
+ax.plot(cycles, X_CO2_values, ls='-', lw=1.3, color = 'black', label='$X_{\mathrm{CO_2}}$')
 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-ax.set_xlim(1, cycles)
+ax.set_xlim(1,20)
 ax.legend()
-filename = plot_dir / f"mass_balance_{cycles}_cycles_O_balance.png"
+filename = Path("plots") / "mass_balance_20_cycles_O_balance.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 plt.show()

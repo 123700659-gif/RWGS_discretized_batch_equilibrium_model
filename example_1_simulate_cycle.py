@@ -11,7 +11,7 @@ mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color= plt.cm.viridis(np.linspace(0
 
 
 # === Set material from options - "CeO2", "CeZr05", "CeZr15", "CeZr20", "LSF"
-material = "CeZr15"
+material = "CeZr20"
 
 # === Define process conditions
 T = 1023  # Temperature in Kelvin
@@ -21,7 +21,7 @@ n_oxide = 10  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-left_red=True
+left_red=False
 left_ox=False
 delta_x_0 = np.zeros(oxide_mesh)
 

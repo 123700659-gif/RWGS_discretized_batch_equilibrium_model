@@ -7,7 +7,7 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
                    T=1073, n_CO2=1.0, n_H2=1.01, n_oxide=20,
                    x_H2O_0=0.005, x_CO2_0=0.998,
                    oxide_mesh=100, gas_mesh=100,
-                   left_flow_red=False, left_flow_ox=True, return_details = False):
+                   left_flow_red=False, left_flow_ox=True, return_details=False):
     """
     Simulate a single chemical looping cycle (reduction + oxidation) in a 1D reactor.
 
@@ -33,6 +33,9 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
 
     All returned grids use the same physical spatial orientation. No additional
     flips are needed when passing the final solid profile to the next cycle.
+
+    With return_details=True, returns a dictionary containing the four grids
+    and a copy of the actual pre-reduction profile (initial_delta_red).
 
     Returns:
         tuple:
@@ -79,6 +82,8 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
             raise ValueError("delta_x_0 must contain one value per oxide element.")
         delta_t_x_red[0] = initial_profile
 
+    initial_delta_red = delta_t_x_red[0].copy()
+
     # Create differential change in oxygen mass balance arrays for batch equilibrium solver
     d_delta_red, d_X_red = build_arrays.mass_balance_arrays(
         delta_max=delta_max, n_gas=n_H2,
@@ -109,9 +114,8 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
     if return_details:
         return {
             "grids": (delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox),
-            "initial_delta_red": delta_t_x_red[0].copy(),
+            "initial_delta_red": initial_delta_red,
         }
-
     return delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox
 
 

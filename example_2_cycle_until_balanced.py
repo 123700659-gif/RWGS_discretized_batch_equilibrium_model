@@ -8,7 +8,7 @@ from functions.energy_balance import calculate_energy_balance, oxidation_dT_quas
 from functions.main import cycle_until_balanced
 
 # === Set material from options - "CeO2", "CeZr05", "CeZr15", "CeZr20", "LSF"
-material = "CeZr15"
+material = "CeZr20"
 
 # === Define process conditions
 T = 1023  # Temperature in Kelvin
