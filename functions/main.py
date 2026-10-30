@@ -1,6 +1,7 @@
 import numpy as np
 from functions import build_arrays
 from functions import build_mu_O_functions
+from functions.batch_equilibrium_solver import EquilibriumDomainError
 from functions.discretized_solver import sequential_batch_equilibrium
 
 def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
@@ -34,8 +35,11 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
     All returned grids use the same physical spatial orientation. No additional
     flips are needed when passing the final solid profile to the next cycle.
 
-    With return_details=True, returns a dictionary containing the four grids
-    and a copy of the actual pre-reduction profile (initial_delta_red).
+    With return_details=True, returns a dictionary containing the four grids,
+    the actual pre-reduction profile, and first-cycle solid-domain diagnostics.
+    If the first-cycle feed μO falls outside the modeled solid range, the
+    starting delta is clamped to the corresponding endpoint and a warning is
+    emitted; the diagnostic records the feed and modeled μO bounds.
 
     Returns:
         tuple:
@@ -62,8 +66,37 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
     mu_O_H2O_func = build_mu_O_functions.set_mu_O_H2O_function(T, X_range)
 
     # Use the oxidizing feed equilibrium only to initialize the first cycle.
-    max_oxidising_mu_O = mu_O_CO2_func(x_CO2_0)
-    delta_min = mu_O_delta_func_inv(max_oxidising_mu_O)
+    initial_equilibrium_diagnostic = None
+    if first_cycle:
+        feed_mu_O = float(mu_O_CO2_func(x_CO2_0))
+        solid_mu_O = np.asarray(mu_O_delta_func(delta_range), dtype=float)
+        solid_mu_min = float(np.min(solid_mu_O))
+        solid_mu_max = float(np.max(solid_mu_O))
+        if feed_mu_O > solid_mu_max:
+            delta_min = float(delta_range[0])
+            outside_direction = "above"
+        elif feed_mu_O < solid_mu_min:
+            delta_min = float(delta_range[-1])
+            outside_direction = "below"
+        else:
+            delta_min = float(mu_O_delta_func_inv(feed_mu_O))
+            outside_direction = None
+        initial_equilibrium_diagnostic = {
+            "outside_solid_domain": outside_direction is not None,
+            "feed_mu_O": feed_mu_O,
+            "solid_mu_O_min": solid_mu_min,
+            "solid_mu_O_max": solid_mu_max,
+            "direction": outside_direction,
+            "initial_delta": delta_min,
+        }
+        if outside_direction is not None:
+            import warnings
+            warnings.warn(
+                "Initial feed/solid equilibrium lies "
+                f"{outside_direction} the modeled solid domain; "
+                f"initializing at delta={delta_min:g}.",
+                RuntimeWarning, stacklevel=2,
+            )
     # Retain the material range for probing either reaction direction. This
     # sets probe magnitudes; it does not enforce final-state physical bounds.
 
@@ -94,27 +127,41 @@ def simulate_cycle(material="CeO2", first_cycle=True, delta_x_0=None,
         n_oxide=n_oxide, gas_mesh=gas_mesh, oxide_mesh=oxide_mesh
     )
 
-    # Run reduction simulation
-    delta_t_x_red, x_H2O_t_x_red = sequential_batch_equilibrium(
-        mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
-        delta_t_x_red, x_H2O_t_x_red, d_delta_red, d_X_red,
-        mbf_red, left_flow=left_flow_red
-    )
+    try:
+        # Run reduction simulation
+        delta_t_x_red, x_H2O_t_x_red = sequential_batch_equilibrium(
+            mu_O_delta_func, mu_O_H2O_func, x_H2O_0,
+            delta_t_x_red, x_H2O_t_x_red, d_delta_red, d_X_red,
+            mbf_red, left_flow=left_flow_red
+        )
 
-    # Use reduction output as initial condition for oxidation
-    delta_t_x_ox[0] = delta_t_x_red[-1]
+        # Use reduction output as initial condition for oxidation
+        delta_t_x_ox[0] = delta_t_x_red[-1]
 
-    # Run oxidation simulation
-    delta_t_x_ox, x_CO2_t_x_ox = sequential_batch_equilibrium(
-        mu_O_delta_func, mu_O_CO2_func, x_CO2_0,
-        delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
-        mbf_ox, left_flow=left_flow_ox
-    )
+        # Run oxidation simulation
+        delta_t_x_ox, x_CO2_t_x_ox = sequential_batch_equilibrium(
+            mu_O_delta_func, mu_O_CO2_func, x_CO2_0,
+            delta_t_x_ox, x_CO2_t_x_ox, d_delta_ox, d_X_ox,
+            mbf_ox, left_flow=left_flow_ox
+        )
+    except EquilibriumDomainError as exc:
+        if initial_equilibrium_diagnostic and initial_equilibrium_diagnostic[
+            "outside_solid_domain"
+        ]:
+            direction = initial_equilibrium_diagnostic["direction"]
+            raise EquilibriumDomainError(
+                "Initial feed/solid equilibrium lies "
+                f"{direction} the modeled solid domain and was clamped to "
+                f"delta={delta_min:g}; {exc}",
+                initial_equilibrium_diagnostic=initial_equilibrium_diagnostic,
+            ) from exc
+        raise
 
     if return_details:
         return {
             "grids": (delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox),
             "initial_delta_red": initial_delta_red,
+            "initial_equilibrium_diagnostic": initial_equilibrium_diagnostic,
         }
     return delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox
 
@@ -124,7 +171,7 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
                          x_H2O_0=0.005, x_CO2_0=0.998,
                          oxide_mesh=100, gas_mesh=100,
                          flow_sequence=None, delta_tolerance=1e-4,
-                         return_details=False):
+                         return_details=False, stop_on_convergence=True):
     """Repeat a flow sequence until its oxygen balance and solid profile repeat.
 
     x_H2O_0 and x_CO2_0 are inlet oxidiser mole fractions. The remaining inlet
@@ -139,6 +186,7 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
     max_cycles limits reduction-oxidation pairs, not sequence repetitions.
     Only complete sequences run; unused capacity smaller than one sequence
     is ignored. At least two repetitions are needed to establish convergence.
+    Set stop_on_convergence=False to run all complete sequences up to max_cycles.
     n_H2 and n_CO2 are feed amounts per phase, not per complete sequence.
 
     Convergence requires both:
@@ -151,7 +199,8 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
     preserving the existing five-value return format. With return_details=True,
     returns a dictionary containing every pair of the final complete sequence,
     its flow directions and net products, convergence status, and diagnostics
-    for every repetition. Earlier repetitions' full grids are not retained.
+    for every repetition, including the first-cycle initialization's solid
+    domain status. Earlier repetitions' full grids are not retained.
     Reaching max_cycles without convergence emits a warning for either format.
     """
     import warnings
@@ -176,6 +225,7 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
     cycles = 0
     converged = False
     history = []
+    initial_equilibrium_diagnostic = None
 
     for repetition in range(1, max_cycles // len(sequence) + 1):
         sequence_results = []
@@ -183,14 +233,23 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
         total_CO = 0.0
 
         for left_flow_red, left_flow_ox in sequence:
-            grids = simulate_cycle(
+            cycle_result = simulate_cycle(
                 material=material, first_cycle=(cycles == 0),
                 delta_x_0=initial_profile,
                 T=T, n_CO2=n_CO2, n_H2=n_H2, n_oxide=n_oxide,
                 x_H2O_0=x_H2O_0, x_CO2_0=x_CO2_0,
                 oxide_mesh=oxide_mesh, gas_mesh=gas_mesh,
                 left_flow_red=left_flow_red, left_flow_ox=left_flow_ox,
+                return_details=True,
             )
+            if isinstance(cycle_result, dict):
+                grids = cycle_result["grids"]
+                if cycles == 0:
+                    initial_equilibrium_diagnostic = cycle_result[
+                        "initial_equilibrium_diagnostic"
+                    ]
+            else:
+                grids = cycle_result
             delta_red, x_H2O_red, delta_ox, x_CO2_ox = grids
             initial_profile = delta_ox[-1].copy()
             outlet_red = 0 if left_flow_red else -1
@@ -226,7 +285,7 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
             "profile_error": profile_error,
             "converged": converged,
         })
-        if converged:
+        if converged and stop_on_convergence:
             break
         previous_sequence_end = initial_profile.copy()
 
@@ -245,5 +304,6 @@ def cycle_until_balanced(max_cycles=20, O_balance_tolerance=0.001, material="CeO
             "profile_error": profile_error,
             "n_H2O": total_H2O, "n_CO": total_CO,
             "history": history,
+            "initial_equilibrium_diagnostic": initial_equilibrium_diagnostic,
         }
     return (*grids, cycles)

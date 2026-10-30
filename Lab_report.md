@@ -457,7 +457,7 @@ CuO2 - conversion limited
 
 Update `mass_balance.py`
 
-### 10/01/26:
+### 10/10/26:
 
 Run of `mass_balance_test.py`: **reduction exceeds one** for both situations, but higher for 
 ```python
@@ -535,7 +535,66 @@ plot conversion of CO2
 see how much oxide is required to have a high conversion
 only counter-current before conversion
 
+### Wednesday:
+
+-   added `example_3_sequence_model.py`, which runs sequence 
+```python
+sequence = [(False, True), (True, False)]
+```
+until cycle is closed or until max_cycle is reached, then plots the CO2 conversion. 
 
 
 
+## Week 6 - 
+### Meeting
 
+
+Results: 
+main figure: co-current
+counter-current
+anty coking
+
+then plot max perf predicted by model on same plot
+
+if anti-coking method looks good, look reactor sizing
+
+`example_3` : do max 100 cycles, 
+
+show simple drawing of reactor with co-current and counter-current (flows)
+
+can't use pressure, but high excess hydrogen and Temperature
+
+
+Introduction: 
+not too much climate - major challenge to reduce carbon dioxide emissions & IPCC
+go to leading ideas faster
+don't mention carbon capture
+develop power-to-X
+
+
+for heat map "say use of cantera to get figure"
+
+## Week 7 -
+
+### Meeting
+
+As n-oxide increases plot delta_reduction end and last line of oxidation of non-stoichiometry profile
+
+- switch reactors scheme
+
+$H_{2} \rightarrow H_{2}O$
+
+add in intro 
+\[
+2 CO \rightarrow CO_{2} / C(s)
+\]
+pressure dependent and thermodynamically favorable
+ industrial reactor P approx 10bar 
+higher partial pressure of CO higher changes to form C(s)
+
+remove C : 
+\[
+    C(s) + H_{2}O \rightarrow CO + H_{2}
+\]
+
+- add basic catalytic RWGS heat map for intro

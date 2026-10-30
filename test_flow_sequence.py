@@ -5,10 +5,65 @@ from unittest.mock import patch
 
 import numpy as np
 
+from functions.batch_equilibrium_solver import EquilibriumDomainError
 from functions.main import cycle_until_balanced, simulate_cycle
 
 
 class FlowSequenceTests(unittest.TestCase):
+    def test_first_cycle_saturates_out_of_range_feed_and_reports_domain(self):
+        def unchanged_phase(_mu_O_delta_func, _mu_O_gas_func, x_0,
+                            delta_t_x, x_gas_t_x, *_args, **_kwargs):
+            delta_t_x[:] = delta_t_x[0]
+            x_gas_t_x[:] = x_0
+            _ = (_mu_O_delta_func, _mu_O_gas_func, _args, _kwargs)
+            return delta_t_x, x_gas_t_x
+
+        with patch('functions.main.sequential_batch_equilibrium',
+                   side_effect=unchanged_phase), self.assertWarns(RuntimeWarning):
+            result = simulate_cycle(
+                T=500, oxide_mesh=2, gas_mesh=2, return_details=True,
+            )
+
+        diagnostic = result['initial_equilibrium_diagnostic']
+        self.assertTrue(diagnostic['outside_solid_domain'])
+        self.assertEqual(diagnostic['direction'], 'above')
+        np.testing.assert_array_equal(
+            result['initial_delta_red'],
+            np.full(2, diagnostic['initial_delta']),
+        )
+        self.assertAlmostEqual(diagnostic['initial_delta'], 1e-6)
+
+    def test_first_cycle_uses_reduced_endpoint_when_feed_is_below_range(self):
+        def unchanged_phase(_mu_O_delta_func, _mu_O_gas_func, x_0,
+                            delta_t_x, x_gas_t_x, *_args, **_kwargs):
+            delta_t_x[:] = delta_t_x[0]
+            x_gas_t_x[:] = x_0
+            _ = (_mu_O_delta_func, _mu_O_gas_func, _args, _kwargs)
+            return delta_t_x, x_gas_t_x
+
+        with patch('functions.main.sequential_batch_equilibrium',
+                   side_effect=unchanged_phase), self.assertWarns(RuntimeWarning):
+            result = simulate_cycle(
+                T=1500, x_CO2_0=1e-6, oxide_mesh=2, gas_mesh=2,
+                return_details=True,
+            )
+
+        diagnostic = result['initial_equilibrium_diagnostic']
+        self.assertTrue(diagnostic['outside_solid_domain'])
+        self.assertEqual(diagnostic['direction'], 'below')
+        self.assertAlmostEqual(diagnostic['initial_delta'], 0.335)
+
+    def test_batch_failure_keeps_initial_out_of_domain_diagnostic(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', RuntimeWarning)
+            with self.assertRaises(EquilibriumDomainError) as raised:
+                simulate_cycle(T=500, oxide_mesh=4, gas_mesh=5)
+
+        diagnostic = raised.exception.initial_equilibrium_diagnostic
+        self.assertTrue(diagnostic['outside_solid_domain'])
+        self.assertEqual(diagnostic['direction'], 'above')
+        self.assertIn('lies above the modeled solid domain', str(raised.exception))
+
     def test_sequence_balance_outlets_and_profile_handoff(self):
         calls = []
 
@@ -62,6 +117,22 @@ class FlowSequenceTests(unittest.TestCase):
         self.assertFalse(result['converged'])
         self.assertEqual(result['oxygen_balance_error'], 0.0)
         self.assertAlmostEqual(result['profile_error'], 0.02)
+
+    def test_can_run_all_requested_cycles_after_convergence(self):
+        def balanced_cycle(**kwargs):
+            solid = np.full((1, 2), 0.01)
+            gas = np.full((1, 2), kwargs['x_H2O_0'])
+            co2 = np.full((1, 2), kwargs['x_CO2_0'])
+            return solid.copy(), gas, solid.copy(), co2
+
+        with patch('functions.main.simulate_cycle', side_effect=balanced_cycle):
+            result = cycle_until_balanced(
+                flow_sequence=[(False, True), (True, False)],
+                max_cycles=6, return_details=True, stop_on_convergence=False,
+            )
+        self.assertEqual(result['cycles'], 6)
+        self.assertTrue(result['converged'])
+        self.assertEqual(len(result['sequence_results']), 2)
 
     def test_real_cycles_preserve_oxygen_and_orientation(self):
         for red_left, ox_left in [(False, False), (False, True), (True, False), (True, True)]:

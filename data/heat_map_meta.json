@@ -1,0 +1,43 @@
+{
+  "p_Pa": 100000.0,
+  "n_CO2_mol": 1.0,
+  "configs": [
+    "Alternating countercurrent",
+    "Countercurrent",
+    "Cocurrent"
+  ],
+  "flow_sequences": {
+    "Alternating countercurrent": [
+      [
+        false,
+        true
+      ],
+      [
+        true,
+        false
+      ]
+    ],
+    "Countercurrent": [
+      [
+        false,
+        true
+      ]
+    ],
+    "Cocurrent": [
+      [
+        false,
+        false
+      ]
+    ]
+  },
+  "reactor_vmin": 0.044875097662379404,
+  "reactor_vmax": 0.9999824143678874,
+  "domain_status_codes": {
+    "valid": 0,
+    "initial_equilibrium_outside_solid_domain": 1,
+    "batch_equilibrium_outside_modeled_domain": 2,
+    "other_simulation_error": 3,
+    "initial_equilibrium_and_batch_outside_modeled_domain": 4
+  },
+  "mechanism": "gri30.yaml"
+}

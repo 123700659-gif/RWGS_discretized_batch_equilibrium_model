@@ -1,5 +1,14 @@
 import numpy as np
 
+
+class EquilibriumDomainError(ValueError):
+    """Raised when no equilibrium intersection exists in the modeled domain."""
+
+    def __init__(self, message, *, initial_equilibrium_diagnostic=None):
+        super().__init__(message)
+        self.initial_equilibrium_diagnostic = initial_equilibrium_diagnostic
+
+
 def batch_equilibrium(mu_O_delta_func, mu_O_gas_func, delta_i, x_i, d_delta, d_X, mu_tolerance=0.1):
     """
     Solve equilibrium condition for a batch reactor in either direction.
@@ -36,7 +45,10 @@ def batch_equilibrium(mu_O_delta_func, mu_O_gas_func, delta_i, x_i, d_delta, d_X
         diff_mu_O = mu_O_delta_func(delta_i + d_delta) - mu_O_gas_func(x_i + d_X)
         idx = np.argwhere(np.diff(np.sign(diff_mu_O))).flatten()
         if idx.size == 0:
-            raise ValueError("Reduction. No intersection of chemical potential curves found.")
+            raise EquilibriumDomainError(
+                "Reduction. No intersection of chemical potential curves found "
+                "within the modeled domain."
+            )
         d_d = d_delta[idx] - diff_mu_O[idx] / (
                 (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
         )
@@ -47,7 +59,10 @@ def batch_equilibrium(mu_O_delta_func, mu_O_gas_func, delta_i, x_i, d_delta, d_X
         diff_mu_O = - mu_O_delta_func(delta_i - d_delta) + mu_O_gas_func(x_i - d_X)
         idx = np.argwhere(np.diff(np.sign(diff_mu_O))).flatten()
         if idx.size == 0:
-            raise ValueError("Oxidation. No intersection of chemical potential curves found.")
+            raise EquilibriumDomainError(
+                "Oxidation. No intersection of chemical potential curves found "
+                "within the modeled domain."
+            )
         d_d = d_delta[idx] - diff_mu_O[idx] / (
         (diff_mu_O[idx + 1] - diff_mu_O[idx]) / (d_delta[idx + 1] - d_delta[idx])
         )
