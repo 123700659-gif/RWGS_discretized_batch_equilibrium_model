@@ -8,7 +8,7 @@ from functions.energy_balance import calculate_energy_balance, oxidation_dT_quas
 from functions.main import cycle_until_balanced
 
 # === Set material from options - "CeO2", "CeZr05", "CeZr15", "CeZr20", "LSF"
-material = "CeZr15"
+material = "CeZr20"
 
 # === Define process conditions
 T = 1023  # Temperature in Kelvin
@@ -17,7 +17,8 @@ n_H2 = 1.5  # Moles of H2 per reduction cycle
 n_oxide = 15  # Moles of oxide material
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
-
+left_red=True
+left_ox=True
 
 # === Simulate cycles===
 delta_red, x_H2O_red, delta_ox, x_CO2_ox, cycles = cycle_until_balanced(
@@ -30,15 +31,18 @@ delta_red, x_H2O_red, delta_ox, x_CO2_ox, cycles = cycle_until_balanced(
     x_CO2_0=x_CO2_0,
     x_H2O_0=x_H2O_0
 )
-
+delta_ox_prev = delta_red[0].copy()
 # === Post processing ===
-X_CO2, X_H2, O_bal_gas, O_bal_oxide= calculate_mass_balance(
+X_CO2, X_H2, O_bal_gas, O_bal_oxide, O_bal_oxide_red = calculate_mass_balance(
     delta_red, x_H2O_red, delta_ox, x_CO2_ox,
+    initial_delta_red = delta_ox_prev,
     n_CO2=n_CO2,
     n_H2=n_H2,
     n_oxide=n_oxide,
     x_CO2_0=x_CO2_0,
-    x_H2O_0=x_H2O_0
+    x_H2O_0=x_H2O_0,
+    left_flow_red=left_red, 
+    left_flow_ox=left_ox
 )
 
 
@@ -46,5 +50,6 @@ Q_red_abs, Q_ox_rel = calculate_energy_balance(
     T, delta_red, material=material, X_CO2=X_CO2
 )
 
-print(f" # of cycles till balanced= {cycles} | O balance oxide = {O_bal_oxide:.6f} | CO/H2O = {O_bal_gas:.5f} ")
+print(f" # of cycles till balanced= {cycles} | O balance oxide (oxidation) = {O_bal_oxide:.6f} "
+      f"| O balance oxide (reduction) = {O_bal_oxide_red:.6f} | CO/H2O = {O_bal_gas:.5f} ")
 print(f"X_CO2 = {X_CO2:.4f} | X_H2 = {X_H2:.4f} | Q_red = {Q_red_abs:.3f} kJ/mol | Q_ox = {Q_ox_rel:.3f} kJ/mol")

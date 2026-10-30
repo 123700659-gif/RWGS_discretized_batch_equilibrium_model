@@ -1,0 +1,36 @@
+{
+  "p_Pa": 100000.0,
+  "n_CO2_mol": 1.0,
+  "configs": [
+    "Alternating countercurrent",
+    "Countercurrent",
+    "Cocurrent"
+  ],
+  "flow_sequences": {
+    "Alternating countercurrent": [
+      [
+        false,
+        true
+      ],
+      [
+        true,
+        false
+      ]
+    ],
+    "Countercurrent": [
+      [
+        false,
+        true
+      ]
+    ],
+    "Cocurrent": [
+      [
+        false,
+        false
+      ]
+    ]
+  },
+  "reactor_vmin": 0.0,
+  "reactor_vmax": 1.0,
+  "mechanism": "gri30.yaml"
+}

@@ -22,6 +22,8 @@ n_oxide = 40            # Moles of oxide in the bed
 x_CO2_0 = 0.998         # Initial mole fraction CO2
 x_H2O_0 = 0.002         # Initial mole fraction H2O
 mesh_range = np.arange(2, 250, 2)
+reduction=True
+oxidation=False
 
 # === Initialize storage lists ===
 solve_time = []
@@ -73,7 +75,7 @@ plt.ylabel("Conversion extent $X_i$ [-]")
 plt.axvline(x = 100, color = 'black', ls = '--', label = 'default value')
 plt.legend()
 
-plt.set_xlim(0, 250)
+plt.xlim(0, 250)
 filename = Path("plots") / "mesh_test_conversion.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 

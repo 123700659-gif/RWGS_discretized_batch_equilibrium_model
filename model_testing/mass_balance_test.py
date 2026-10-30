@@ -34,6 +34,9 @@ n_oxide = 20  # Moles of oxide material
 cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
+gas_mesh, oxide_mesh = 100, 100 # Discretization
+left_flow_red=False
+left_flow_ox=True
 
 # === Initialize storage for plotting variables
 delta_red_end = []
@@ -45,52 +48,53 @@ O_bal_oxide_values = []
 O_bal_oxide_values_red = []
 
 # === Initial state of the oxide bed (uniform delta profile)
-delta_x_0 = np.zeros(100)
+delta_x_0 = np.zeros(oxide_mesh)
 first_cycle = True
 
 # === Run simulation for defined number of cycles
 for cycle in range(cycles):
     tic = time.perf_counter()
-
-    # Get previous oxidation profile or initial state
-    if first_cycle:
-        delta_ox_prev = delta_x_0
-    else:
-        delta_ox_prev = delta_t_x_ox[-1]
-
+    
     # Run one redox cycle (reduction followed by oxidation)
-    delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox = simulate_cycle(
+    simulation = simulate_cycle(
         material=material,
-        first_cycle=first_cycle,
-        delta_x_0=delta_x_0,
-        x_CO2_0=x_CO2_0,
-        x_H2O_0=x_H2O_0,
-        T=T,
-        n_H2=n_H2,
-        n_oxide=n_oxide
+            first_cycle=first_cycle,    
+            delta_x_0=delta_x_0,    # use previous oxidation profile
+            x_CO2_0=x_CO2_0,
+            x_H2O_0=x_H2O_0,
+            T=T,
+            n_CO2=n_CO2,
+            n_H2=n_H2,
+            n_oxide=n_oxide,
+            gas_mesh = gas_mesh,
+            oxide_mesh = oxide_mesh, 
+            left_flow_red=left_flow_red,
+            left_flow_ox=left_flow_ox, return_details=True
     )
+
+    delta_t_x_red, x_H2O_t_x_red, delta_t_x_ox, x_CO2_t_x_ox = simulation["grids"]
+    delta_ox_prev = simulation["initial_delta_red"]
 
     # Update flag and initial condition for next cycle
     first_cycle = False
-    delta_x_0 = delta_t_x_ox[-1]
+    delta_x_0 = delta_t_x_ox[-1].copy()
 
     # Compute conversions and oxygen balances
-    X_CO2, X_H2, O_bal_gas, O_bal_oxide = calculate_mass_balance(
-        delta_t_x_red, x_H2O_t_x_red,
-        delta_t_x_ox, x_CO2_t_x_ox,
+    # Compute gas conversions and oxygen balances
+    X_CO2, X_H2, O_bal_gas, O_bal_oxide, O_bal_oxide_red = calculate_mass_balance(
+        delta_t_x_red,
+        x_H2O_t_x_red,
+        delta_t_x_ox,
+        x_CO2_t_x_ox,
+        initial_delta_red=delta_ox_prev,
         x_CO2_0=x_CO2_0,
         x_H2O_0=x_H2O_0,
+        n_CO2=n_CO2,
         n_H2=n_H2,
-        n_oxide=n_oxide
+        n_oxide=n_oxide,
+        left_flow_red=left_flow_red,
+        left_flow_ox=left_flow_ox
     )
-
-    # Change in delta during reduction step
-    d_delta_CeO2 = delta_t_x_red[-1] - delta_ox_prev
-    nO_CeO2_red = d_delta_CeO2.sum() * n_oxide / len(delta_t_x_red[-1])
-
-    # H2O produced and compute oxygen balance during reduction
-    n_H2O = (x_H2O_t_x_red.T[-1].mean() - x_H2O_0) * n_H2
-    O_Bal_oxide_red = n_H2O / nO_CeO2_red
 
     # Store simulation results
     delta_red_end.append(delta_t_x_red[-1])
@@ -99,13 +103,12 @@ for cycle in range(cycles):
     X_H2_values.append(X_H2)
     O_bal_gas_values.append(O_bal_gas)
     O_bal_oxide_values.append(O_bal_oxide)
-    O_bal_oxide_values_red.append(O_Bal_oxide_red)
+    O_bal_oxide_values_red.append(O_bal_oxide_red)
 
     toc = time.perf_counter()
     print(f"Cycle {cycle}: solve time {toc - tic:.2f} s, ", O_bal_oxide, O_bal_gas)
 
-# the first reduction mass balance is not valid.
-O_bal_oxide_values_red.pop(0)
+# The actual initial profile makes the first reduction balance valid.
 
 print("Final CO2 conversion:", X_CO2_values[-1])
 
@@ -150,9 +153,9 @@ cycles = np.linspace(1,20,20)
 fig, ax = plt.subplots(figsize=(3.4, 3.2))
 ax.set_xlabel('Cycle # [-]')
 ax.set_ylabel('Mass Balance [-]')
-ax.plot(np.linspace(2,20,19), O_bal_oxide_values_red, ls='--', lw=1.3, color='tab:orange', label='Reduction: H$_2$O/$\\Delta \delta$')
+ax.plot(cycles, O_bal_oxide_values_red, ls='--', lw=1.3, color='tab:orange', label='Reduction: H$_2$O/$\\Delta \delta$')
 ax.plot(cycles, O_bal_oxide_values, ls=':', lw=2, color='tab:blue', label='Oxidation: CO/$\\Delta \delta$')
-ax.plot(cycles, O_bal_gas_values, ls='--', lw=1.3, color = 'tab:green', label='Cycle: H$_2$O/CO')
+ax.plot(cycles, O_bal_gas_values, ls='--', lw=1.3, color = 'tab:green', label='Cycle: CO/H$_2$O')
 ax.plot(cycles, X_H2_values, ls='-', color = 'grey', lw=1.3, label='$X_{\mathrm{H_2}}$')
 ax.plot(cycles, X_CO2_values, ls='-', lw=1.3, color = 'black', label='$X_{\mathrm{CO_2}}$')
 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
