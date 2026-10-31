@@ -2,11 +2,16 @@
 heat_map_model.py
 
 Cantera equilibrium reference:
-   A single-panel TP-equilibrium map (no reactor, no flow arrangement).
    Used for validation and to bound the reactor result.
 
 Figures and data are written to
 plots/ and data/
+
+Compares solid profiles at one operating point. At 1200 K and an H₂/CO₂ ratio of 2, it plots the final oxide state, δ, along the reactor for the three flow arrangements. This is a line plot, not a heat map.
+
+Sweeps operating conditions through the reactor model. It calculates CO₂ conversion for each arrangement across temperatures from 700 to 1590 K and H₂/CO₂ ratios from 1 to 4. The model uses CeZr20 and the mesh and feed settings specified in PHASE_BASE.
+
+Calculates a Cantera equilibrium reference. It computes conversion across the same temperature/ratio grid, but without the reactor flow model.
 """
 
 import os
@@ -109,35 +114,36 @@ CONFIGS = list(FLOW_SEQUENCES.keys())
 T_profile = 1200
 ratio_profile = 2.0
 
-fig, (ax_ox, ax_red) = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
+def delta_profiles():
+    fig, (ax_ox, ax_red) = plt.subplots(1, 2, figsize=(11, 4), sharey=True)
 
-for name, flow_sequence in FLOW_SEQUENCES.items():
-    result = cycle_until_balanced(
-        T=T_profile,
-        n_CO2=n_CO2,
-        n_H2=ratio_profile * n_CO2,
-        flow_sequence=flow_sequence,
-        return_details=True,
-        **PHASE_BASE,
-    )
+    for name, flow_sequence in FLOW_SEQUENCES.items():
+        result = cycle_until_balanced(
+            T=T_profile,
+            n_CO2=n_CO2,
+            n_H2=ratio_profile * n_CO2,
+            flow_sequence=flow_sequence,
+            return_details=True,
+            **PHASE_BASE,
+        )
 
-    last_cycle = result["sequence_results"][-1]
-    delta_ox_end = last_cycle["delta_ox"][-1, :]
-    delta_red_end = last_cycle["delta_red"][-1, :]
-    x = np.linspace(0, 1, delta_ox_end.size)
+        last_cycle = result["sequence_results"][-1]
+        delta_ox_end = last_cycle["delta_ox"][-1, :]
+        delta_red_end = last_cycle["delta_red"][-1, :]
+        x = np.linspace(0, 1, delta_ox_end.size)
 
-    ax_ox.plot(x, delta_ox_end, label=name)
-    ax_red.plot(x, delta_red_end, label=name)
+        ax_ox.plot(x, delta_ox_end, label=name)
+        ax_red.plot(x, delta_red_end, label=name)
 
-ax_ox.set_title("End of oxidation")
-ax_red.set_title("End of reduction")
-for ax in (ax_ox, ax_red):
-    ax.set_xlabel("Normalized reactor position, x")
-    ax.legend()
+    ax_ox.set_title("End of oxidation")
+    ax_red.set_title("End of reduction")
+    for ax in (ax_ox, ax_red):
+        ax.set_xlabel("Normalized reactor position, x")
+        ax.legend()
 
-ax_ox.set_ylabel(r"Final $\delta$")
-fig.tight_layout()
-plt.show()
+    ax_ox.set_ylabel(r"Final $\delta$")
+    fig.tight_layout()
+    plt.show()
 
 # Cantera gas 
 
@@ -231,6 +237,29 @@ levels_contour = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 os.makedirs("plots", exist_ok=True)
 os.makedirs("data", exist_ok=True)
+
+# Figure 1: three reactor panels with shared colourbar
+
+fig, axes = plt.subplots(1, 3, figsize=(12.6, 3.4), sharey=True,
+                         constrained_layout=True)
+im = None
+for ax, cfg in zip(axes, CONFIGS):
+    X = X_reactor[cfg]
+    im = ax.pcolormesh(T_grid, ratio_grid, X, shading="auto",
+                       rasterized=True,
+                       vmin=vmin_reactor, vmax=vmax_reactor)
+    cs = ax.contour(T_grid, ratio_grid, X, levels=levels_contour,
+                    colors="black", linewidths=0.7)
+    ax.clabel(cs, fmt="%1.1f", fontsize=7)
+    ax.set_xlabel(r"$T$ [K]")
+    ax.set_title(cfg.replace(" ", "\n", 1), fontsize=9)
+    ax.set_ylim(nH2_range.min(), nH2_range.max())
+axes[0].set_ylabel(r"$\mathrm{H_2/CO_2}$ [-]")
+cbar = fig.colorbar(im, ax=axes, shrink=0.95, pad=0.02)
+cbar.set_label(r"$X_\mathrm{CO_2}$ (reactor, feed conversion)")
+fig.savefig("plots/heat_map_flow_arrangements.png", dpi=400, bbox_inches="tight")
+fig.savefig("plots/heat_map_flow_arrangements.pdf", bbox_inches="tight")
+plt.close(fig)
 
 # Save data
 
