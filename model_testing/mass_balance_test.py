@@ -18,13 +18,13 @@ from functions.mass_balance import calculate_mass_balance
 from functions.main import simulate_cycle
 
 """
-This script runs a countercurrent chemical looping model to estimate thermodynamic limits.
+This script runs an alternating countercurrent chemical looping model to estimate thermodynamic limits.
 It simulates multiple redox cycles and visualizes the evolution of non-stoichiometry (delta),
 reactor conversions, and oxygen mass balances.
 """
 
 # === Set material from options - "CeO2", "CeZr05", "CeZr15", "CeZr20", "LSF"
-material = "CeZr15"
+material = "CeZr20"
 
 # === Define process conditions
 T = 1023  # Temperature in Kelvin
@@ -35,8 +35,7 @@ cycles = 20  # Number of redox cycles
 x_CO2_0 = 0.998  # Initial CO2 mole fraction
 x_H2O_0 = 0.005  # Initial H2O mole fraction
 gas_mesh, oxide_mesh = 100, 100 # Discretization
-left_flow_red=False
-left_flow_ox=True
+flow_sequence = ((False, True), (True, False))
 
 # === Initialize storage for plotting variables
 delta_red_end = []
@@ -54,6 +53,7 @@ first_cycle = True
 # === Run simulation for defined number of cycles
 for cycle in range(cycles):
     tic = time.perf_counter()
+    left_flow_red, left_flow_ox = flow_sequence[cycle % len(flow_sequence)]
     
     # Run one redox cycle (reduction followed by oxidation)
     simulation = simulate_cycle(
@@ -143,7 +143,7 @@ ax.plot(x_space, delta_ox_end[-1], ls='--', lw=1.2,  label='End of oxidation #20
 ax.set_xlim(0,100)
 ax.set_ylim(0,0.2)
 plt.legend()
-filename = Path("plots") / "mass_balance_20_cycle_delta_profiles.png"
+filename = Path("plots") / "mass_balance_20_cycle_delta_profiles_alternating_countercurrent.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 
 plt.show()
@@ -161,6 +161,6 @@ ax.plot(cycles, X_CO2_values, ls='-', lw=1.3, color = 'black', label='$X_{\mathr
 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 ax.set_xlim(1,20)
 ax.legend()
-filename = Path("plots") / "mass_balance_20_cycles_O_balance.png"
+filename = Path("plots") / "mass_balance_20_cycles_O_balance_alternating_countercurrent.png"
 plt.savefig(filename, dpi=300, bbox_inches='tight')
 plt.show()
