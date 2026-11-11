@@ -75,6 +75,7 @@ def main():
     ax.grid(True, alpha=0.3)
     ax.legend()
     fig.tight_layout()
+    plt.savefig("example_3.pdf")
     plt.show()
 
 

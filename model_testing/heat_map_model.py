@@ -288,5 +288,4 @@ if __name__ == "__main__":
     print("\nWrote:")
     print("  plots/heat_map_flow_arrangements.{png,pdf}")
     print("  plots/heat_map_equilibrium_reference.{png,pdf}")
-    print("  data/heat_map_data.npz")
     print("  data/heat_map_meta.json")

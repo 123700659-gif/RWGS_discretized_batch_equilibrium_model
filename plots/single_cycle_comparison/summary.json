@@ -10,25 +10,59 @@
     "gas_mesh": 100,
     "oxide_mesh": 100
   },
-  "initial_delta": 0.010120988463584996,
   "runs": {
     "countercurrent": {
-      "left_flow_red": false,
-      "left_flow_ox": true,
-      "net_H2O_mol": 0.8870713691242841,
-      "net_CO_mol": 0.7458664048185213,
-      "reduction_balance_residual_mol": 3.3306690738754696e-16,
-      "oxidation_balance_residual_mol": 0.0,
-      "final_mean_delta": 0.024241484894161284
+      "cycles": [
+        {
+          "cycle": 1,
+          "left_flow_red": false,
+          "left_flow_ox": true,
+          "net_H2O_mol": 0.8870711744811087,
+          "net_CO_mol": 0.7458662216260548,
+          "reduction_balance_residual_mol": 0.0,
+          "oxidation_balance_residual_mol": 1.1102230246251565e-16,
+          "final_mean_delta": 0.0242414837490904
+        }
+      ]
     },
     "cocurrent": {
-      "left_flow_red": false,
-      "left_flow_ox": false,
-      "net_H2O_mol": 0.8870713691242841,
-      "net_CO_mol": 0.7328753068567837,
-      "reduction_balance_residual_mol": 3.3306690738754696e-16,
-      "oxidation_balance_residual_mol": -1.1102230246251565e-16,
-      "final_mean_delta": 0.02554059469033505
+      "cycles": [
+        {
+          "cycle": 1,
+          "left_flow_red": false,
+          "left_flow_ox": false,
+          "net_H2O_mol": 0.8870711744811087,
+          "net_CO_mol": 0.7328753633900462,
+          "reduction_balance_residual_mol": 0.0,
+          "oxidation_balance_residual_mol": -1.1102230246251565e-16,
+          "final_mean_delta": 0.02554056957269124
+        }
+      ]
+    },
+    "alternating_countercurrent": {
+      "cycles": [
+        {
+          "cycle": 1,
+          "left_flow_red": false,
+          "left_flow_ox": true,
+          "net_H2O_mol": 0.8870711744811087,
+          "net_CO_mol": 0.7458662216260548,
+          "reduction_balance_residual_mol": 0.0,
+          "oxidation_balance_residual_mol": 1.1102230246251565e-16,
+          "final_mean_delta": 0.0242414837490904
+        },
+        {
+          "cycle": 2,
+          "left_flow_red": true,
+          "left_flow_ox": false,
+          "net_H2O_mol": 0.7466981778261055,
+          "net_CO_mol": 0.7466494634908332,
+          "reduction_balance_residual_mol": -1.1102230246251565e-16,
+          "oxidation_balance_residual_mol": 0.0,
+          "final_mean_delta": 0.02424635518261764
+        }
+      ]
     }
-  }
+  },
+  "initial_delta": 0.010120988463584996
 }

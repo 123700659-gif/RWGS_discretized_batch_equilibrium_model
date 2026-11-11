@@ -598,3 +598,50 @@ remove C :
 \]
 
 - add basic catalytic RWGS heat map for intro
+
+## Week 8 - 
+### 02/11/26:
+```bash
+(base) bash-3.2$ python -m model_testing.heat_map_model.py
+/Users/mathildedeclercq/miniconda3/bin/python: Error while finding module specification for 'model_testing.heat_map_model.py' (ModuleNotFoundError: __path__ attribute not found on 'model_testing.heat_map_model' while trying to find 'model_testing.heat_map_model.py'). Try using 'model_testing.heat_map_model' instead of 'model_testing.heat_map_model.py' as the module name.
+```
+
+
+### Meeting
+- put heat map early + picture of catalytic reactor
+
+order of introduction:
+- RWGS conversion, can mention Fischer-Tropp - conversion problem, can be fixed using CL (maybe cut short after cite 2) , PtX offers a way to utilise renewable energy to split water.
+- CL 
+- side reactions
+
+
+end of introdutcion: modeling the process
+- point ot discretized batch model , explain you go from counter-current to coutner-current and co-current
+- avoid coke accumulation
+
+Figure 2: label that it's full of metal oxides, or some texture
+
+
+
+Aims & objectives:
+The aims of this project was to expand an exisisting model.
+We expand it to allow co-current & counter-current, and any combination of directions switching 
+(make bullet point)
+- modify base model, to allow model to go directions
+- mass balance & mesh tests (include mass balance equation)
+- 
+
+(don't put any reactions in there, put intro when mention operating mode )
+
+Methodology:
+checks oxygen chemical potential / element potential
+- add Fig. 2. from paper
+
+- report cannot exceed 25 pages
+
+## Week 9 - 
+
+### Meeting:
+- Figures size 5, 4 instead of 8, 6
+- add appendix : model structure overview, desription of each code

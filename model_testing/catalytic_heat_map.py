@@ -8,7 +8,7 @@ import numpy as np
 
 # Feed ratio scan for catalytic RWGS equilibrium
 nH2_range = np.arange(1.0, 4.0, 0.05)  # H2/CO2 feed ratio [-]
-T_range = np.arange(573, 1700, 10)      # Temperature [K]
+T_range = np.arange(600, 1900, 10)      # Temperature [K]
 p = 100_000.0                           # Pressure [Pa]
 
 # Create the gas phase model
